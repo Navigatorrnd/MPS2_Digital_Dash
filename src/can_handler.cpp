@@ -12,6 +12,7 @@ int Can_Handler::wheel_angle;
 mps_general_params_t Can_Handler::current_params;
 mps_etacs_params_t Can_Handler::current_etacs_params;
 mps_autoac_params_t Can_Handler::current_autoac_params;
+mps_odom_params_t Can_Handler::current_odom_params;
 bool Can_Handler::is_bus_active;
 bool Can_Handler::is_did_active;
 
@@ -140,23 +141,6 @@ void Can_Handler::taskCanSend()
     }
 
 } 
-
-mps_general_params_t Can_Handler::get_params()
-{
-    return current_params;
-}
-mps_autoac_params_t Can_Handler::get_ac_params()
-{
-    return current_autoac_params;
-}
-mps_etacs_params_t Can_Handler::get_etacs_params()
-{
-    return current_etacs_params;
-}
-int Can_Handler::get_wheel_angle()
-{
-    return wheel_angle;
-}
 
 
 void Can_Handler::HandleRxEvent(CAN_FRAME* rxFrame) 
@@ -392,4 +376,8 @@ void Can_Handler::calculate()
 
     double d_dist = (double)current_params.avrg_speed / (3600.0f);
     current_params.trip += d_dist*1.015f;  
+    current_odom_params.trip_a = current_params.trip;
+    current_odom_params.trip_b = current_params.trip;
+    current_odom_params.trip_curr = current_params.trip;
+    current_odom_params.odometer = current_params.odometer;
 }

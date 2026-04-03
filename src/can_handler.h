@@ -26,10 +26,11 @@ public:
     void CanHandlerDeInit();
     void taskCanSend();
     void calculate();
-    mps_general_params_t get_params();
-    mps_autoac_params_t get_ac_params();
-    mps_etacs_params_t get_etacs_params();
-    int get_wheel_angle();
+    mps_general_params_t get_params(){ return current_params; }
+    mps_autoac_params_t get_ac_params(){ return current_autoac_params; }
+    mps_etacs_params_t get_etacs_params(){ return current_etacs_params; }
+    mps_odom_params_t get_odom_params(){ return current_odom_params; }
+    int get_wheel_angle(){ return wheel_angle; }
     bool get_bus_active(){ return is_bus_active; }
     bool get_did_active(){ return is_did_active; }
     void reset_bus_active(){ is_bus_active = false; }
@@ -47,6 +48,7 @@ private:
     static mps_general_params_t current_params;
     static mps_etacs_params_t current_etacs_params;
     static mps_autoac_params_t current_autoac_params;
+    static mps_odom_params_t current_odom_params;
     static int wheel_angle;
     static bool is_bus_active;
     static bool is_did_active;

@@ -51,6 +51,73 @@ void Display_Handler::DisplayInit(String ver)
     lvgl_port_unlock();
 };
 
+String AtState_to_str(uint8_t at_drive);
+void Display_Handler::DisplayTickDiD(mps_general_params_t params_did)
+{
+    lvgl_port_lock(-1);
+    lv_meter_set_indicator_value(objects.speedometr, screen_main_state.indicator, params_did.speed);
+    lv_label_set_text(objects.speed, String(params_did.speed).c_str());
+    lv_label_set_text(objects.rpm, String(params_did.rpm).c_str());
+    lv_label_set_text(objects.torq, String(params_did.torque).c_str());
 
+    lv_label_set_text(objects.at_state, String(AtState_to_str(params_did.at_drive)).c_str());
+    lv_label_set_text(objects.eng_temp, String(params_did.t_engine).c_str());
+    lv_label_set_text(objects.atf_temp, String(params_did.t_akpp).c_str());
+    lv_label_set_text(objects.voltage, String(params_did.v_ecu).c_str());
+    lv_label_set_text(objects.in_temp, String(params_did.t_int).c_str());
+    lv_label_set_text(objects.out_temp, String(params_did.t_ext).c_str());
+    lv_label_set_text(objects.freezer_temp, String(params_did.p_intake).c_str());
+    
+    
+    lvgl_port_unlock();
+};
+
+void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo)
+{
+    lvgl_port_lock(-1);
+    lv_label_set_text(objects.odo, String(params_odo.odometer).c_str());
+    lv_label_set_text(objects.trip_a, String(params_odo.trip_a).c_str());
+    lv_label_set_text(objects.trip_b, String(params_odo.trip_b).c_str());
+    lv_label_set_text(objects.trip_curr, String(params_odo.trip_curr).c_str());
+    
+    lvgl_port_unlock();
+};
 
   					
+String AtState_to_str(uint8_t at_drive)
+{   String result = "";
+    if(at_drive<0xff)
+    {
+        switch (at_drive) 
+        {
+            case 0x00:
+                result = "N";
+                break;
+            case 0x01:
+                result = "1";
+                break;
+            case 0x02:
+                result = "2";
+                break;
+            case 0x03:
+                result = "3";
+                break;
+            case 0x04:
+                result = "4";
+                break;
+            case 0x05:
+                result = "5";
+                break;
+            case 0x0d:
+                result = "P";
+                break;
+            case 0x0b:
+                result = "R";
+                break;
+            default:
+                result = "E";
+                break;
+        }
+    } 
+    return result;
+}

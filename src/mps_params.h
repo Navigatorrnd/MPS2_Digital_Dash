@@ -79,4 +79,10 @@ typedef struct {
     bool mirror_heat;
 } mps_autoac_params_t;
 
+typedef struct {
+    uint32_t odometer;
+    double trip_a;
+    double trip_b;
+    double trip_curr;
+} mps_odom_params_t;
 #endif

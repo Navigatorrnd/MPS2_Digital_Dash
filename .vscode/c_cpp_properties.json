@@ -8,7 +8,6 @@
         {
             "name": "PlatformIO",
             "includePath": [
-                "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                 "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/ESP32_CAN/src",
                 "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/can_common/src",
                 "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/GyverTimer/src",
@@ -281,6 +280,7 @@
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/RainMaker/src",
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SD/src",
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SD_MMC/src",
+                "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SPIFFS/src",
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SimpleBLE/src",
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/TFLiteMicro/src",
@@ -297,7 +297,6 @@
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "path": [
-                    "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                     "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/ESP32_CAN/src",
                     "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/can_common/src",
                     "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/GyverTimer/src",
@@ -570,6 +569,7 @@
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/RainMaker/src",
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SD/src",
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SD_MMC/src",
+                    "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SPIFFS/src",
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/SimpleBLE/src",
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32/libraries/TFLiteMicro/src",

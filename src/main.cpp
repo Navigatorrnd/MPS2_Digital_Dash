@@ -31,6 +31,7 @@ bool speed_up = true;
 GTimer reqTimer(MS);  
 GTimer calculateTimer(MS);
 GTimer displayTimer(MS);
+GTimer displayOdoTimer(MS);
 GTimer canboxTimer(MS);
 GTimer hudTimer(MS);
 GTimer busActiveCheckTimer(MS);  
@@ -54,7 +55,8 @@ void setup()
     Serial.println("setup CanHandlerInit");  
     reqTimer.setInterval(200);
     calculateTimer.setInterval(1000);
-    displayTimer.setInterval(200);  
+    displayTimer.setInterval(100);  
+    displayOdoTimer.setInterval(1000); 
 
     display.DisplayInit(VERSION);
     //delay(5000);
@@ -120,7 +122,11 @@ void loop()
     }     
     if(displayTimer.isReady())
     {
-     
+        display.DisplayTickDiD(can_handler.get_params());
         //display.u8g2display(can_handler.get_params(), can_handler.get_wheel_angle()); 
     } 
+    if(displayOdoTimer.isReady())
+    {
+        display.DisplayTickODO(can_handler.get_odom_params());   
+    }
 }
