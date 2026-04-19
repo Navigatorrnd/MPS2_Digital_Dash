@@ -97,6 +97,7 @@ public:
   #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 2, 0)
     twai_handle_t bus_handle;
   #endif
+  static bool is_stopped;
 
 protected:
   bool readyForTraffic;
@@ -120,6 +121,7 @@ private:
 
   static void task_CAN(void *pvParameters);
   static void task_LowLevelRX(void *pvParameters);
+  
 };
 
 extern QueueHandle_t callbackQueue;

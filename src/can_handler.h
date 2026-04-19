@@ -5,6 +5,7 @@
 #include <esp32_can.h>
 #include <esp_task_wdt.h>
 #include "mps_params.h"
+#include "GyverTimer.h"
 
 #define CAN_PIN_RX  GPIO_NUM_5      // Rx pin for TJA1051T/3
 #define CAN_PIN_TX  GPIO_NUM_4      // Tx pin for TJA1051T/3
@@ -24,6 +25,7 @@ public:
     
     void CanHandlerInit();
     void CanHandlerDeInit();
+    void CanHandlerTwaiRestart();
     void taskCanSend();
     void calculate();
     mps_general_params_t get_params(){ return current_params; }
@@ -63,6 +65,8 @@ private:
     void sendPid(unsigned long can_id, unsigned char __pid);
     static  void HandleRxEvent(CAN_FRAME* rxFrame);
     int pid_iterator;
+
+    
 
 };
 

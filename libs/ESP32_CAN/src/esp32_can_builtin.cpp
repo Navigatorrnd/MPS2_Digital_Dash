@@ -34,6 +34,8 @@ const VALID_TIMING valid_timings[] =
     {TWAI_TIMING_CONFIG_25KBITS(), 0} //this is a terminator record. When the code sees an entry with 0 speed it stops searching
 };
 
+bool ESP32CAN::is_stopped = false;
+
 ESP32CAN::ESP32CAN(gpio_num_t rxPin, gpio_num_t txPin, uint8_t busNumber) : CAN_COMMON(32)
 {
     twai_general_cfg.rx_io = rxPin;
@@ -41,19 +43,20 @@ ESP32CAN::ESP32CAN(gpio_num_t rxPin, gpio_num_t txPin, uint8_t busNumber) : CAN_
     cyclesSinceTraffic = 0;
     readyForTraffic = false;
     twai_general_cfg.tx_queue_len = BI_TX_BUFFER_SIZE;
-    twai_general_cfg.rx_queue_len = 6;
+    twai_general_cfg.rx_queue_len = 200;
     rxBufferSize = BI_RX_BUFFER_SIZE;
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 2, 0)
     bus_handle = nullptr;
     twai_general_cfg.controller_id = busNumber;
 #endif
+    
 }
 
 ESP32CAN::ESP32CAN() : CAN_COMMON(BI_NUM_FILTERS) 
 {
     twai_general_cfg.tx_queue_len = BI_TX_BUFFER_SIZE;
-    twai_general_cfg.rx_queue_len = 6;
+    twai_general_cfg.rx_queue_len = 200;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 2, 0)
     bus_handle = nullptr;
 #endif
@@ -83,7 +86,8 @@ void ESP32CAN::CAN_WatchDog_Builtin( void *pvParameters )
     const TickType_t xDelay = 200 / portTICK_PERIOD_MS;
     twai_status_info_t status_info;
 
-    for(;;)
+    //for(;;)
+    while (!is_stopped)
     {
         vTaskDelay( xDelay );
         espCan->cyclesSinceTraffic++;
@@ -102,6 +106,7 @@ void ESP32CAN::CAN_WatchDog_Builtin( void *pvParameters )
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 2, 0)
                 result = twai_initiate_recovery_v2(espCan->bus_handle);
+                printf("Initiate bus recovery!\n");
 #else
                 result = twai_initiate_recovery();
 #endif
@@ -111,7 +116,10 @@ void ESP32CAN::CAN_WatchDog_Builtin( void *pvParameters )
                 }
             }
         }
+        
     }
+    Serial.println("CAN_WatchDog_Builtin killed");
+    vTaskDelete(NULL);
 }
 
 //infinitely loops accepting frames from the TWAI driver. Calls
@@ -120,8 +128,14 @@ void ESP32CAN::CAN_WatchDog_Builtin( void *pvParameters )
 void ESP32CAN::task_LowLevelRX(void *pvParameters)
 {
     ESP32CAN* espCan = (ESP32CAN*)pvParameters;
-    
-    while (1)
+    twai_message_t temp_msg;
+    Serial.println("task_LowLevelRX started");
+    while (twai_receive_v2(espCan->bus_handle, &temp_msg, 0) == ESP_OK) { 
+    // Просто выкидываем старые сообщения, которые накопились за доли секунды запуска
+    }
+
+    twai_clear_receive_queue_v2(espCan->bus_handle);   
+    while (!is_stopped)
     {
         twai_message_t message;
         if (espCan->readyForTraffic)
@@ -137,8 +151,10 @@ void ESP32CAN::task_LowLevelRX(void *pvParameters)
                 espCan->processFrame(message);
             }
         }
-        else vTaskDelay(pdMS_TO_TICKS(100));
+        else vTaskDelay(pdMS_TO_TICKS(4));
     }
+    Serial.println("task_LowLevelRX killed");
+    vTaskDelete(NULL);
     
 }
 
@@ -156,8 +172,11 @@ void ESP32CAN::task_CAN( void *pvParameters )
 {
     ESP32CAN* espCan = (ESP32CAN*)pvParameters;
     CAN_FRAME rxFrame;
+    Serial.println("task_CAN started");
+    //delay a bit upon initial start up
+    vTaskDelay(pdMS_TO_TICKS(100));
 
-    while (1)
+    while (!is_stopped)
     {
         if (uxQueueMessagesWaiting(espCan->callbackQueue)) {
             //receive next CAN frame from queue and fire off the callback
@@ -165,13 +184,15 @@ void ESP32CAN::task_CAN( void *pvParameters )
             {
                 espCan->sendCallback(&rxFrame);
             }
-        }
-        //else vTaskDelay(pdMS_TO_TICKS(100));
+        }        
+        else vTaskDelay(pdMS_TO_TICKS(4)); //if you don't delay here it will slow down the whole system. Need some delay.
+        //printf("^");
+        //probably don't need this extra delay. Test and find out.
 #if defined(CONFIG_FREERTOS_UNICORE)
-        delay(10);
+    vTaskDelay(pdMS_TO_TICKS(6)); 
 #endif
     }
-
+    Serial.println("task_CAN killed");
     vTaskDelete(NULL);
 }
 
@@ -266,6 +287,7 @@ void ESP32CAN::_init()
 
 uint32_t ESP32CAN::init(uint32_t ul_baudrate)
 {
+    is_stopped = false;
     ESP_LOGD("CAN", "Init called");
     _init();
     ESP_LOGD("CAN", "Init done");
@@ -275,7 +297,8 @@ uint32_t ESP32CAN::init(uint32_t ul_baudrate)
     {
         //Reconfigure alerts to detect Error Passive and Bus-Off error states
         uint32_t alerts_to_enable = TWAI_ALERT_ERR_PASS | TWAI_ALERT_BUS_OFF | TWAI_ALERT_AND_LOG | TWAI_ALERT_ERR_ACTIVE 
-                                  | TWAI_ALERT_ARB_LOST | TWAI_ALERT_BUS_ERROR | TWAI_ALERT_TX_FAILED | TWAI_ALERT_RX_QUEUE_FULL;
+                                  | TWAI_ALERT_ARB_LOST | TWAI_ALERT_BUS_ERROR | TWAI_ALERT_TX_FAILED | TWAI_ALERT_RX_QUEUE_FULL 
+                                  | TWAI_ALERT_BUS_RECOVERED ;
 
         esp_err_t result;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 2, 0)
@@ -304,9 +327,10 @@ uint32_t ESP32CAN::init(uint32_t ul_baudrate)
 #if defined(CONFIG_FREERTOS_UNICORE)
     xTaskCreate(ESP32CAN::task_LowLevelRX, canLowLevelTaskName, 4096, this, 19, NULL);
 #else
-    xTaskCreatePinnedToCore(ESP32CAN::task_LowLevelRX, canLowLevelTaskName, 4096, this, 19, NULL, 1);
+    xTaskCreatePinnedToCore(ESP32CAN::task_LowLevelRX, canLowLevelTaskName, 4096, this, /*19*/configMAX_PRIORITIES - 1, NULL, 1);
 #endif
     readyForTraffic = true;
+    
     return ul_baudrate;
 }
 
@@ -382,6 +406,7 @@ void ESP32CAN::setNoACKMode(bool state)
 
 void ESP32CAN::enable()
 {
+    is_stopped = false;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 2, 0)
     if (twai_driver_install_v2(&twai_general_cfg, &twai_speed_cfg, &twai_filters_cfg, &bus_handle) == ESP_OK) {
         printf("Driver installed - bus %d\n", twai_general_cfg.controller_id);
@@ -426,7 +451,7 @@ void ESP32CAN::enable()
     xTaskCreate(ESP32CAN::task_LowLevelRX, canLowLevelTaskName, 4096, this, 19, &task_LowLevelRX_handler);
 #else
     //this next task implements our better filtering on top of the TWAI library. Accept all frames then filter in here VVVVV
-    xTaskCreatePinnedToCore(&task_LowLevelRX, canLowLevelTaskName, 4096, this, 19, &task_LowLevelRX_handler, 1);
+    xTaskCreatePinnedToCore(&task_LowLevelRX, canLowLevelTaskName, 4096, this, configMAX_PRIORITIES - 1, &task_LowLevelRX_handler, 1);
 #endif
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 2, 0)
@@ -455,27 +480,32 @@ void ESP32CAN::enable()
 
 void ESP32CAN::disable()
 {
+    printf("ESP32CAN::disable\n");
     twai_status_info_t info;
     if (twai_get_status_info(&info) == ESP_OK) {
         if (info.state == TWAI_STATE_RUNNING) {
-            twai_stop();
+            printf("ESP32CAN::twai_stop\n");
+            
+            printf("ESP32CAN::twai_stop %d\n", twai_stop_v2(bus_handle));
         }
-
-        for (auto task : {task_CAN_handler, task_LowLevelRX_handler}) {
+        for (auto task : {task_CAN_handler, task_LowLevelRX_handler/*, CAN_WatchDog_Builtin_handler*/}) {
             if (task != NULL)
             {
+                printf("ESP32CAN::vTaskDelete\n");
                 vTaskDelete(task);
                 task = NULL;
             }
         }
-
         for (auto queue : {rx_queue, callbackQueue}) {
             if (queue) {
+                printf("ESP32CAN::vQueueDelete\n");
                 vQueueDelete(queue);
             }
         }
-
-        twai_driver_uninstall();
+        is_stopped = true;
+        vTaskDelay(pdMS_TO_TICKS(250)); 
+        printf("ESP32CAN::twai_driver_uninstall\n");
+        printf("ESP32CAN::twai_driver_uninstall %d\n", twai_driver_uninstall_v2(bus_handle));
     } else {
         return;
     }

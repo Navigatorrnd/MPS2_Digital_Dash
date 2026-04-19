@@ -34,7 +34,9 @@ GTimer displayTimer(MS);
 GTimer displayOdoTimer(MS);
 GTimer canboxTimer(MS);
 GTimer hudTimer(MS);
-GTimer busActiveCheckTimer(MS);  
+GTimer busActiveCheckTimer(MS);
+
+GTimer twaiCheckTimer(MS);   
 
 Can_Handler can_handler;
 Display_Handler display;  
@@ -55,19 +57,19 @@ void setup()
     Serial.println("setup CanHandlerInit");  
     reqTimer.setInterval(200);
     calculateTimer.setInterval(1000);
-    displayTimer.setInterval(100);  
+    displayTimer.setInterval(200);  
     displayOdoTimer.setInterval(1000); 
 
     display.DisplayInit(VERSION);
-    //delay(5000);
-    //Serial.println("loadScreen MAIN");
-    //lvgl_port_lock(-1);
-    //loadScreen(SCREEN_ID_MAIN);
-    //lvgl_port_unlock();
+    delay(5000);
+    Serial.println("loadScreen MAIN");
+    lvgl_port_lock(-1);
+    loadScreen(SCREEN_ID_MAIN);
+    lvgl_port_unlock();
 
     Serial.println("Setup complete");
     timing = millis();
-
+    twaiCheckTimer.setTimeout(10000);
 }
 
 void loop()
@@ -112,7 +114,7 @@ void loop()
 #endif
     if(reqTimer.isReady())
     {        
-        can_handler.taskCanSend();
+        //can_handler.taskCanSend();
         
     }      
     if(calculateTimer.isReady())
@@ -123,10 +125,24 @@ void loop()
     if(displayTimer.isReady())
     {
         display.DisplayTickDiD(can_handler.get_params());
+        display.DisplayTickSpeed(can_handler.get_params());
         //display.u8g2display(can_handler.get_params(), can_handler.get_wheel_angle()); 
     } 
     if(displayOdoTimer.isReady())
     {
         display.DisplayTickODO(can_handler.get_odom_params());   
+    }
+
+    if(can_handler.get_bus_active())
+    {
+        twaiCheckTimer.setTimeout(1000);  
+        can_handler.reset_bus_active();
+    }
+    if(twaiCheckTimer.isReady())
+    {
+        Serial.println("twaiCheckTimer; restart"); 
+        reqTimer.stop();
+        can_handler.CanHandlerTwaiRestart();
+        
     }
 }

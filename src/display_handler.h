@@ -18,10 +18,12 @@ public:
     void DisplayInit(String ve);
     void DisplayTickDiD(mps_general_params_t params_did);
     void DisplayTickODO(mps_odom_params_t params_odo);
+    void DisplayTickSpeed(mps_general_params_t params_did);
 private:
     //U8G2 u8g2;//(&u8g2_cb_r0, /* cs=*/ 21, /* dc=*/ 17, /* reset=*/ 16);
 
     uint8_t active_check_cnc;
+    int old_speed;
 
 };
 

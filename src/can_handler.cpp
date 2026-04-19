@@ -70,7 +70,7 @@ void Can_Handler::sendPid(unsigned long can_id, unsigned char __pid) {
 void Can_Handler::CanHandlerInit() {
   // initialize can
   Serial.println("CAN init start");
-  CAN0.debuggingMode = false;
+  CAN0.debuggingMode = true;
   CAN0.setCANPins(CAN_PIN_RX,CAN_PIN_TX);
   Serial.println("setCANPins");
   if (!CAN0.begin(500000)) {
@@ -89,9 +89,11 @@ void Can_Handler::CanHandlerInit() {
   //CAN0.attachCANInterrupt([this](CAN_FRAME* frame){
   //                                                  this->HandleRxEvent(frame);} );
 
+  
 }
 
-void Can_Handler::CanHandlerDeInit() {
+void Can_Handler::CanHandlerDeInit() 
+{
 
   
     //set_mask_filt();
@@ -104,7 +106,61 @@ void Can_Handler::CanHandlerDeInit() {
     //CAN0.attachCANInterrupt([this](CAN_FRAME* frame){
     //                                                  this->HandleRxEvent(frame);} );
   
-  }
+}
+
+void Can_Handler::CanHandlerTwaiRestart()
+{
+    // Serial.println("CAN0.twai_initiate_recovery_v2");
+    // twai_initiate_recovery_v2(CAN0.bus_handle);
+    //return;
+    //------------------------
+
+    //-----------------------------------------
+    int res = 0;
+    Serial.println("CAN0.removeCallback");
+    //CAN0.
+    CAN0.removeCallback();
+    //CAN0.detachCANInterrupt(0);
+    
+    Serial.println("CAN0.disable");
+    CAN0.disable();
+
+    Serial.println("CAN0.disable ok");
+
+    //return;
+    // if(!CAN0.set_baudrate(500000))
+    // {
+    //     Serial.println("CAN0.set_baudrate ok");
+    // }
+    // else{
+    //     Serial.println("CAN0.set_baudrate false"); 
+    //     return;
+    // }
+    delay(500);
+    
+
+    //CAN0.debuggingMode = true;
+    // Serial.println("CAN0.setCANPins");
+    // CAN0.setCANPins(CAN_PIN_RX,CAN_PIN_TX);
+    // Serial.println("CAN0.begin");
+
+
+    // if (!CAN0.begin(500000)) {
+    //      Serial.println("CAN0.begin false");
+    //   ESP.restart();
+    // }
+    CAN0.enable();
+
+    //twai_clear_receive_queue_v2(CAN0.bus_handle);
+    //twai_clear_transmit_queue_v2(CAN0.bus_handle);
+
+    CAN0.watchFor(); 
+    Serial.println("CAN0.enable");
+
+    Serial.println("CAN0.attachCANInterrupt");
+    CAN0.attachCANInterrupt(0, HandleRxEvent);   
+    //twai_clear_receive_queue_v2(CAN0.bus_handle);     
+} 
 
 void Can_Handler::taskCanSend()
 {    
@@ -121,7 +177,7 @@ void Can_Handler::taskCanSend()
             break;
 
         case 2:
-            //sendPid(ID_DID_REQ, PID_ODO_INFO);
+            sendPid(ID_DID_REQ, PID_ODO_INFO);
             break;   
 
         case 3:
@@ -229,6 +285,8 @@ void Can_Handler::HandleRxEvent(CAN_FRAME* rxFrame)
         }
         speed_tmp_total  += ((uint32_t)rxFrame->data.uint8[0] * 256 + (uint32_t)rxFrame->data.uint8[1]) / 128;
         speed_tmp_num++;
+        //Serial.print("current_params.speed ");
+        //Serial.println(current_params.speed);
         
 
         double trip;

@@ -4,7 +4,7 @@
 using namespace esp_panel::drivers;
 using namespace esp_panel::board;
 
-
+uint32_t tick_cnt = 0;
 Display_Handler::Display_Handler()
 {    
     //u8g2 = U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI(U8G2_R0, /* cs=*/ 21, /* dc=*/ 17, /* reset=*/ 16);
@@ -49,13 +49,18 @@ void Display_Handler::DisplayInit(String ver)
     loadScreen(SCREEN_ID_START_LOGO);
     lv_label_set_text(objects.version, String(ver).c_str());
     lvgl_port_unlock();
+
+    old_speed = 0;
 };
 
 String AtState_to_str(uint8_t at_drive);
 void Display_Handler::DisplayTickDiD(mps_general_params_t params_did)
 {
+    //Serial.print("DisplayTickDiD ");
+    //Serial.println(tick_cnt);
+    tick_cnt++;
     lvgl_port_lock(-1);
-    lv_meter_set_indicator_value(objects.speedometr, screen_main_state.indicator, params_did.speed);
+    //lv_meter_set_indicator_value(objects.speedometr, screen_main_state.indicator, params_did.speed);
     lv_label_set_text(objects.speed, String(params_did.speed).c_str());
     lv_label_set_text(objects.rpm, String(params_did.rpm).c_str());
     lv_label_set_text(objects.torq, String(params_did.torque).c_str());
@@ -72,18 +77,41 @@ void Display_Handler::DisplayTickDiD(mps_general_params_t params_did)
     lvgl_port_unlock();
 };
 
+
+
 void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo)
 {
     lvgl_port_lock(-1);
     lv_label_set_text(objects.odo, String(params_odo.odometer).c_str());
     lv_label_set_text(objects.trip_a, String(params_odo.trip_a).c_str());
     lv_label_set_text(objects.trip_b, String(params_odo.trip_b).c_str());
-    lv_label_set_text(objects.trip_curr, String(params_odo.trip_curr).c_str());
-    
+    //lv_label_set_text(objects.trip_curr, String(params_odo.trip_curr).c_str());
+    lv_label_set_text(objects.trip_curr, String(tick_cnt).c_str());
     lvgl_port_unlock();
 };
 
-  					
+void set_speedometr_value(void * indicator, int32_t v) {
+    // indicator — это указатель на вашу стрелку (lv_meter_indicator_t)
+    // v — текущее значение анимации
+    lvgl_port_lock(-1);
+    lv_meter_set_indicator_value(objects.speedometr, (lv_meter_indicator_t*)indicator, v);
+    lvgl_port_unlock();
+}
+
+void Display_Handler::DisplayTickSpeed(mps_general_params_t params_did)
+{
+    
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, screen_main_state.indicator);        // Объект, который передастся в колбэк
+    lv_anim_set_values(&a, old_speed, params_did.speed); // Откуда и до скольки
+    lv_anim_set_time(&a, 200);                // Длительность в мс (напр. 500мс)
+    lv_anim_set_exec_cb(&a, set_speedometr_value); // Наша функция выше
+    lv_anim_set_path_cb(&a, lv_anim_path_linear); 
+    lv_anim_start(&a);
+    old_speed = params_did.speed;
+}  	
+
 String AtState_to_str(uint8_t at_drive)
 {   String result = "";
     if(at_drive<0xff)

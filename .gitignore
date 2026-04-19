@@ -47,3 +47,9 @@
 .pio/build/BOARD_CUSTOM/firmware.map
 .vscode/c_cpp_properties.json
 .vscode/c_cpp_properties.json
+.pio/build/project.checksum
+.pio/build/BOARD_CUSTOM/.sconsign312.dblite
+.pio/build/BOARD_CUSTOM/firmware.bin
+.pio/build/BOARD_CUSTOM/firmware.elf
+.pio/build/BOARD_CUSTOM/firmware.map
+.vscode/c_cpp_properties.json
