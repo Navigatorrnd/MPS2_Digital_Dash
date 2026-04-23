@@ -229,6 +229,8 @@ void create_screen_main() {
                     lv_obj_set_style_transform_zoom(obj, 180, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_transform_zoom(obj, 180, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
                     lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+                    lv_obj_set_style_bg_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_bg_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_label_set_text(obj, "TripA");
                 }
                 {
@@ -243,6 +245,8 @@ void create_screen_main() {
                     lv_obj_set_style_transform_zoom(obj, 180, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_transform_zoom(obj, 180, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
                     lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+                    lv_obj_set_style_bg_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_bg_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_label_set_text(obj, "TripB");
                 }
                 {

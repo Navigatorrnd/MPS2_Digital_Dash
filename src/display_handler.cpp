@@ -87,6 +87,12 @@ void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo)
     lv_label_set_text(objects.trip_b, String(params_odo.trip_b).c_str());
     //lv_label_set_text(objects.trip_curr, String(params_odo.trip_curr).c_str());
     lv_label_set_text(objects.trip_curr, String(tick_cnt).c_str());
+
+    if(tripAisActive)lv_obj_set_style_bg_color(objects.trip_a, lv_color_hex(0xff333333), LV_PART_MAIN | LV_STATE_DEFAULT);
+    else lv_obj_set_style_bg_color(objects.trip_a, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    if(tripBisActive)lv_obj_set_style_bg_color(objects.trip_b, lv_color_hex(0xff333333), LV_PART_MAIN | LV_STATE_DEFAULT);
+    else lv_obj_set_style_bg_color(objects.trip_b, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+
     lvgl_port_unlock();
 };
 
@@ -148,4 +154,19 @@ String AtState_to_str(uint8_t at_drive)
         }
     } 
     return result;
+}
+
+
+void Display_Handler::setActiveTrip(int curr)
+{
+    if(curr == 1)
+    {
+        tripAisActive = true;
+        tripBisActive = false;
+    }
+    if(curr == 2)
+    {
+        tripBisActive = true;
+        tripAisActive = false;
+    }
 }

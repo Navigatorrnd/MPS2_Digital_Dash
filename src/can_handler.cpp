@@ -434,8 +434,8 @@ void Can_Handler::calculate()
 
     double d_dist = (double)current_params.avrg_speed / (3600.0f);
     current_params.trip += d_dist*1.015f;  
-    current_odom_params.trip_a = current_params.trip;
-    current_odom_params.trip_b = current_params.trip;
+    current_odom_params.trip_a += d_dist*1.015f; 
+    current_odom_params.trip_b += d_dist*1.015f; 
     current_odom_params.trip_curr = current_params.trip;
     current_odom_params.odometer = current_params.odometer;
 }

@@ -10,10 +10,19 @@
 
 
 #include "GyverTimer.h"
+#include "EncButton.h"
 #include "can_handler.h"
 #include "display_handler.h"
 
+// #include "nvs_flash.h"
+// #include "nvs.h"
 
+#include <Preferences.h>
+
+#define BEEPER_PIN 7
+#define BUTTON_PIN 8
+#define IGN_PIN 9
+#define POWERKEY_PIN 10
 /**
 /* To use the built-in examples and demos of LVGL uncomment the includes below respectively.
  * You also need to copy `lvgl/examples` to `lvgl/src/examples`. Similarly for the demos `lvgl/demos` to `lvgl/src/demos`.
@@ -35,11 +44,16 @@ GTimer displayOdoTimer(MS);
 GTimer canboxTimer(MS);
 GTimer hudTimer(MS);
 GTimer busActiveCheckTimer(MS);
+GTimer ignCheckTimer(MS);
+GTimer poweroffTimer(MS);
 
 GTimer twaiCheckTimer(MS);   
 
 Can_Handler can_handler;
 Display_Handler display;  
+Button btn(BUTTON_PIN);
+int current_trip;
+Preferences saved_params;
 
 void setup()
 {
@@ -50,7 +64,8 @@ void setup()
     Serial.println("Start");
     //delay(2000);
 
-
+    display.DisplayInit(VERSION);
+    delay(5000);
     can_handler = Can_Handler();    
     Serial.println("setup Can_Handler");
     can_handler.CanHandlerInit();  
@@ -59,9 +74,9 @@ void setup()
     calculateTimer.setInterval(1000);
     displayTimer.setInterval(200);  
     displayOdoTimer.setInterval(1000); 
+    ignCheckTimer.setTimeout(15000);
 
-    display.DisplayInit(VERSION);
-    delay(5000);
+
     Serial.println("loadScreen MAIN");
     lvgl_port_lock(-1);
     loadScreen(SCREEN_ID_MAIN);
@@ -70,6 +85,24 @@ void setup()
     Serial.println("Setup complete");
     timing = millis();
     twaiCheckTimer.setTimeout(10000);
+
+    btn.setBtnLevel(LOW);
+    btn.setClickTimeout(500);
+    btn.setDebTimeout(50);
+    btn.setHoldTimeout(600);
+    btn.setStepTimeout(200);
+    btn.setTimeout(1000);
+
+    current_trip = 1;
+    pinMode(IGN_PIN, INPUT_PULLDOWN);
+    pinMode(POWERKEY_PIN, OUTPUT);
+    digitalWrite(POWERKEY_PIN, 1);
+
+    saved_params.begin("params", false);
+    can_handler.set_tripA(saved_params.getDouble("tripA", 0) );
+    can_handler.set_tripB(saved_params.getDouble("tripB", 0) );
+  
+    
 }
 
 void loop()
@@ -112,6 +145,23 @@ void loop()
         timing = millis();
     }
 #endif
+    btn.tick();
+    if (btn.press())
+    {
+        Serial.println("press");
+        if(current_trip == 1) current_trip = 2;
+        else current_trip = 1;
+    }
+    
+    if (btn.hold()) 
+    {
+        Serial.println("hold");   
+        if(current_trip == 1) can_handler.reset_tripA();
+        if(current_trip == 2) can_handler.reset_tripB();
+    }
+    
+    Serial.println("hold");
+
     if(reqTimer.isReady())
     {        
         //can_handler.taskCanSend();
@@ -144,5 +194,36 @@ void loop()
         reqTimer.stop();
         can_handler.CanHandlerTwaiRestart();
         
+    }
+    if(ignCheckTimer.isReady())
+    {
+        if(digitalRead(IGN_PIN))
+        {
+            ignCheckTimer.setTimeout(5000);  
+        }
+        else
+        {
+            poweroffTimer.setTimeout(60000);
+            Serial.println("IGN off");
+            //saving trips
+            mps_odom_params_t params_odo = can_handler.get_odom_params();
+            saved_params.putDouble("tripA", params_odo.trip_a); 
+            saved_params.putDouble("tripB", params_odo.trip_b); 
+            saved_params.end();
+            Serial.println("params saved");
+        }
+    }
+    if(poweroffTimer.isReady())
+    {
+        if(!digitalRead(IGN_PIN))
+        {
+            Serial.println("poweroff");
+            digitalWrite(POWERKEY_PIN, 0);
+        }
+        else
+        {
+            ignCheckTimer.setTimeout(5000);  
+            digitalWrite(POWERKEY_PIN, 1);
+        }    
     }
 }

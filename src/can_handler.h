@@ -32,6 +32,10 @@ public:
     mps_autoac_params_t get_ac_params(){ return current_autoac_params; }
     mps_etacs_params_t get_etacs_params(){ return current_etacs_params; }
     mps_odom_params_t get_odom_params(){ return current_odom_params; }
+    void reset_tripA(){current_odom_params.trip_a = 0;}
+    void reset_tripB(){current_odom_params.trip_b = 0;}
+    void set_tripA(double trip){current_odom_params.trip_a = trip;}
+    void set_tripB(double trip){current_odom_params.trip_b = trip;}
     int get_wheel_angle(){ return wheel_angle; }
     bool get_bus_active(){ return is_bus_active; }
     bool get_did_active(){ return is_did_active; }
