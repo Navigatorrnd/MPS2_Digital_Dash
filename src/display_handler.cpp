@@ -68,10 +68,10 @@ void Display_Handler::DisplayTickDiD(mps_general_params_t params_did)
     lv_label_set_text(objects.at_state, String(AtState_to_str(params_did.at_drive)).c_str());
     lv_label_set_text(objects.eng_temp, String(params_did.t_engine).c_str());
     lv_label_set_text(objects.atf_temp, String(params_did.t_akpp).c_str());
-    lv_label_set_text(objects.voltage, String(params_did.v_ecu).c_str());
+    lv_label_set_text(objects.voltage, String(params_did.v_ecu, 1).c_str());
     lv_label_set_text(objects.in_temp, String(params_did.t_int).c_str());
     lv_label_set_text(objects.out_temp, String(params_did.t_ext).c_str());
-    lv_label_set_text(objects.freezer_temp, String(params_did.p_intake).c_str());
+    lv_label_set_text(objects.freezer_temp, String(params_did.t_airflow).c_str());
     
     
     lvgl_port_unlock();
@@ -79,19 +79,30 @@ void Display_Handler::DisplayTickDiD(mps_general_params_t params_did)
 
 
 
-void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo)
+void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo, int currTrip)
 {
     lvgl_port_lock(-1);
     lv_label_set_text(objects.odo, String(params_odo.odometer).c_str());
     lv_label_set_text(objects.trip_a, String(params_odo.trip_a).c_str());
     lv_label_set_text(objects.trip_b, String(params_odo.trip_b).c_str());
-    //lv_label_set_text(objects.trip_curr, String(params_odo.trip_curr).c_str());
-    lv_label_set_text(objects.trip_curr, String(tick_cnt).c_str());
+    lv_label_set_text(objects.trip_curr, String(params_odo.trip_curr).c_str());
+    //lv_label_set_text(objects.trip_curr, String(tick_cnt).c_str());
 
-    if(tripAisActive)lv_obj_set_style_bg_color(objects.trip_a, lv_color_hex(0xff333333), LV_PART_MAIN | LV_STATE_DEFAULT);
-    else lv_obj_set_style_bg_color(objects.trip_a, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    if(tripBisActive)lv_obj_set_style_bg_color(objects.trip_b, lv_color_hex(0xff333333), LV_PART_MAIN | LV_STATE_DEFAULT);
-    else lv_obj_set_style_bg_color(objects.trip_b, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    if(currTrip == 1)
+    {
+        lv_obj_set_style_bg_color(objects.trip_a, lv_color_hex(0xff333333), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(objects.trip_b, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+    else if(currTrip == 2)
+    {
+        lv_obj_set_style_bg_color(objects.trip_b, lv_color_hex(0xff333333), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(objects.trip_a, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+    else 
+    {
+        lv_obj_set_style_bg_color(objects.trip_b, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(objects.trip_a, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);       
+    }
 
     lvgl_port_unlock();
 };

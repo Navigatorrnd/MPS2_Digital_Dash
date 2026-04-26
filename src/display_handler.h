@@ -17,7 +17,7 @@ public:
     Display_Handler();
     void DisplayInit(String ve);
     void DisplayTickDiD(mps_general_params_t params_did);
-    void DisplayTickODO(mps_odom_params_t params_odo);
+    void DisplayTickODO(mps_odom_params_t params_odo, int currTrip);
     void DisplayTickSpeed(mps_general_params_t params_did);
     void setActiveTrip(int curr);
 private:

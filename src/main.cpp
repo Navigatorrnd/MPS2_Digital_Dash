@@ -19,8 +19,8 @@
 
 #include <Preferences.h>
 
-#define BEEPER_PIN 7
-#define BUTTON_PIN 8
+#define BEEPER_PIN 11
+#define BUTTON_PIN 6
 #define IGN_PIN 9
 #define POWERKEY_PIN 10
 /**
@@ -46,13 +46,15 @@ GTimer hudTimer(MS);
 GTimer busActiveCheckTimer(MS);
 GTimer ignCheckTimer(MS);
 GTimer poweroffTimer(MS);
+GTimer saveTimer(MS);
+GTimer resetActiveTripTimer(MS);
 
 GTimer twaiCheckTimer(MS);   
 
 Can_Handler can_handler;
 Display_Handler display;  
 Button btn(BUTTON_PIN);
-int current_trip;
+int active_trip;
 Preferences saved_params;
 
 void setup()
@@ -73,7 +75,7 @@ void setup()
     reqTimer.setInterval(200);
     calculateTimer.setInterval(1000);
     displayTimer.setInterval(200);  
-    displayOdoTimer.setInterval(1000); 
+    displayOdoTimer.setInterval(500); 
     ignCheckTimer.setTimeout(15000);
 
 
@@ -87,13 +89,13 @@ void setup()
     twaiCheckTimer.setTimeout(10000);
 
     btn.setBtnLevel(LOW);
-    btn.setClickTimeout(500);
+    btn.setClickTimeout(300);
     btn.setDebTimeout(50);
-    btn.setHoldTimeout(600);
+    btn.setHoldTimeout(500);
     btn.setStepTimeout(200);
     btn.setTimeout(1000);
 
-    current_trip = 1;
+    active_trip = 0;
     pinMode(IGN_PIN, INPUT_PULLDOWN);
     pinMode(POWERKEY_PIN, OUTPUT);
     digitalWrite(POWERKEY_PIN, 1);
@@ -146,22 +148,24 @@ void loop()
     }
 #endif
     btn.tick();
-    if (btn.press())
+    if (btn.click())
     {
-        Serial.println("press");
-        if(current_trip == 1) current_trip = 2;
-        else current_trip = 1;
+        Serial.println("click");
+        if(active_trip == 1)active_trip = 2;
+        else active_trip = 1;
+        //display.setActiveTrip(current_trip);
+        Serial.print("Active trip ");
+        Serial.println(active_trip);
+        resetActiveTripTimer.setTimeout(20000);
     }
     
     if (btn.hold()) 
     {
         Serial.println("hold");   
-        if(current_trip == 1) can_handler.reset_tripA();
-        if(current_trip == 2) can_handler.reset_tripB();
+        if(active_trip == 1) can_handler.reset_tripA();
+        if(active_trip == 2) can_handler.reset_tripB();
     }
     
-    Serial.println("hold");
-
     if(reqTimer.isReady())
     {        
         //can_handler.taskCanSend();
@@ -180,7 +184,7 @@ void loop()
     } 
     if(displayOdoTimer.isReady())
     {
-        display.DisplayTickODO(can_handler.get_odom_params());   
+        display.DisplayTickODO(can_handler.get_odom_params(), active_trip);   
     }
 
     if(can_handler.get_bus_active())
@@ -200,18 +204,33 @@ void loop()
         if(digitalRead(IGN_PIN))
         {
             ignCheckTimer.setTimeout(5000);  
+            //Serial.println("IGN active");
         }
         else
         {
-            poweroffTimer.setTimeout(60000);
-            Serial.println("IGN off");
+            saveTimer.setTimeout(5000);
+            Serial.println("saveTimer activate");
             //saving trips
+
+        }
+    }
+    if(saveTimer.isReady())
+    {
+        if(!digitalRead(IGN_PIN))
+        {
+            Serial.println("IGN off");
             mps_odom_params_t params_odo = can_handler.get_odom_params();
             saved_params.putDouble("tripA", params_odo.trip_a); 
             saved_params.putDouble("tripB", params_odo.trip_b); 
             saved_params.end();
             Serial.println("params saved");
+            poweroffTimer.setTimeout(60000);
+            Serial.println("poweroffTimer activate");
         }
+        else
+        {
+            ignCheckTimer.setTimeout(5000);  
+        }    
     }
     if(poweroffTimer.isReady())
     {
@@ -225,5 +244,11 @@ void loop()
             ignCheckTimer.setTimeout(5000);  
             digitalWrite(POWERKEY_PIN, 1);
         }    
+    }
+
+    if(resetActiveTripTimer.isReady())
+    {
+        active_trip = 0;
+        Serial.println("resetActiveTripTimer");
     }
 }
