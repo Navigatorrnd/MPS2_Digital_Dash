@@ -54,3 +54,4 @@
 .pio/build/BOARD_CUSTOM/firmware.map
 .vscode/c_cpp_properties.json
 .pio/libdeps/BOARD_CUSTOM/ESP32_CAN
+.vscode/c_cpp_properties.json
