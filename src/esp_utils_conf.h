@@ -60,7 +60,7 @@
  *  - ESP_UTILS_MEM_ALLOC_TYPE_CUSTOM:      Use custom memory allocation functions (ESP_UTILS_MEM_ALLOC_CUSTOM_MALLOC,
  *                                          ESP_UTILS_MEM_ALLOC_CUSTOM_FREE)
  */
-#define ESP_UTILS_CONF_MEM_GEN_ALLOC_TYPE                   (ESP_UTILS_MEM_ALLOC_TYPE_STDLIB)
+#define ESP_UTILS_CONF_MEM_GEN_ALLOC_TYPE                   (ESP_UTILS_MEM_ALLOC_TYPE_ESP)
 #if ESP_UTILS_CONF_MEM_GEN_ALLOC_TYPE == ESP_UTILS_MEM_ALLOC_TYPE_ESP
 
     #define ESP_UTILS_CONF_MEM_GEN_ALLOC_ESP_ALIGN          (1)

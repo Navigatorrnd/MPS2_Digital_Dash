@@ -39,18 +39,6 @@
 
 # debug information files
 *.dwo
-.pio/build/BOARD_CUSTOM/idedata.json
-.vscode/c_cpp_properties.json
-.pio/build/BOARD_CUSTOM/.sconsign312.dblite
-.pio/build/BOARD_CUSTOM/firmware.bin
-.pio/build/BOARD_CUSTOM/firmware.elf
-.pio/build/BOARD_CUSTOM/firmware.map
-.vscode/c_cpp_properties.json
-.vscode/c_cpp_properties.json
-.pio/build/project.checksum
-.pio/build/BOARD_CUSTOM/.sconsign312.dblite
-.pio/build/BOARD_CUSTOM/firmware.bin
-.pio/build/BOARD_CUSTOM/firmware.elf
-.pio/build/BOARD_CUSTOM/firmware.map
-.vscode/c_cpp_properties.json
-.pio/libdeps/BOARD_CUSTOM/ESP32_CAN
+.pio/*
+.vscode/*
+

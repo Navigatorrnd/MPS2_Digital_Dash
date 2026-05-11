@@ -38,7 +38,6 @@ void Display_Handler::DisplayInit(String ver)
     lvgl_port_init(board->getLCD(), board->getTouch());
     //lv_disp_set_bg_color(NULL, lv_color_hex(0x0000ffff));
     
-
     Serial.println("Creating UI");
     lvgl_port_lock(-1);
     ui_init() ;
@@ -58,7 +57,8 @@ void Display_Handler::DisplayTickDiD(mps_general_params_t params_did)
 {
     //Serial.print("DisplayTickDiD ");
     //Serial.println(tick_cnt);
-    tick_cnt++;
+    
+    //tick_cnt++;
     lvgl_port_lock(-1);
     //lv_meter_set_indicator_value(objects.speedometr, screen_main_state.indicator, params_did.speed);
     lv_label_set_text(objects.speed, String(params_did.speed).c_str());
@@ -72,14 +72,13 @@ void Display_Handler::DisplayTickDiD(mps_general_params_t params_did)
     lv_label_set_text(objects.in_temp, String(params_did.t_int).c_str());
     lv_label_set_text(objects.out_temp, String(params_did.t_ext).c_str());
     lv_label_set_text(objects.freezer_temp, String(params_did.t_airflow).c_str());
-    
-    
+
     lvgl_port_unlock();
 };
 
 
 
-void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo, int currTrip)
+void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo, int currTrip,  mps_etacs_params_t etacs_params, int dimmer)
 {
     lvgl_port_lock(-1);
     lv_label_set_text(objects.odo, String(params_odo.odometer).c_str());
@@ -103,7 +102,24 @@ void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo, int currTrip)
         lv_obj_set_style_bg_color(objects.trip_b, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_color(objects.trip_a, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);       
     }
-
+    
+    if(etacs_params.position_lamp)
+    {   
+        lv_led_set_brightness(objects.position_lamp, 255);
+        lv_obj_set_style_bg_opa(objects.dimmer, dimmer, LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+    else 
+    {
+        lv_led_set_brightness(objects.position_lamp, 2);
+        lv_obj_set_style_bg_opa(objects.dimmer, dimmer, LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+    if(etacs_params.head_lamp_lo)
+    {
+        lv_led_set_brightness(objects.head_lamp, 255);
+        
+    }
+    else lv_led_set_brightness(objects.head_lamp, 2);
+    //Serial.println(etacs_params.head_lamp_lo);
     lvgl_port_unlock();
 };
 

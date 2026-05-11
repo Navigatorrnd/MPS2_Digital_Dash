@@ -45,6 +45,7 @@ typedef struct {
     int t_engine2;                // Температура двигателя (°C) от блока климата.
     int t_airflow;                // Температура воздуха в печке (°C).
     uint8_t at_drive;
+    uint8_t at_drive_current;
     uint32_t raw_fuel;
     float fuel_in_H;
     float fuel_in_100;

@@ -40,7 +40,7 @@ public:
     bool get_bus_active(){ return is_bus_active; }
     bool get_did_active(){ return is_did_active; }
     void reset_bus_active(){ is_bus_active = false; }
-    void reset_did_active(){ is_did_active = false; }
+    void reset_did_active();
 
 private:
     static bool req_more;
@@ -58,6 +58,7 @@ private:
     static int wheel_angle;
     static bool is_bus_active;
     static bool is_did_active;
+    static uint32_t did_active_cnt;
     /*bool req_more;
     int fuel_tmp_buf[10];
     int fuel_tmp_total;

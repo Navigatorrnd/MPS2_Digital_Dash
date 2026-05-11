@@ -9,8 +9,11 @@
 #ifdef CONFIG_ARDUINO_RUNNING_CORE
 #include <Arduino.h>
 #endif
+#include "driver/ppa.h"
 #include "esp_display_panel.hpp"
 #include "lvgl.h"
+#include "esp_cache.h"
+
 
 // *INDENT-OFF*
 
@@ -46,7 +49,7 @@
  */
 #define LVGL_PORT_TASK_MAX_DELAY_MS             (500)       // The maximum delay of the LVGL timer task, in milliseconds
 #define LVGL_PORT_TASK_MIN_DELAY_MS             (2)         // The minimum delay of the LVGL timer task, in milliseconds
-#define LVGL_PORT_TASK_STACK_SIZE               (6 * 1024)  // The stack size of the LVGL timer task, in bytes
+#define LVGL_PORT_TASK_STACK_SIZE               (20 * 1024)  // The stack size of the LVGL timer task, in bytes
 #define LVGL_PORT_TASK_PRIORITY                 (2)         // The priority of the LVGL timer task
 #ifdef ARDUINO_RUNNING_CORE
 #define LVGL_PORT_TASK_CORE                     (ARDUINO_RUNNING_CORE)  // Valid if using Arduino
@@ -58,6 +61,8 @@
                                                             // This can be set to `1` only if the SoCs support dual-core,
                                                             // otherwise it should be set to `-1` or `0`
 
+                                                            
+#define PPAOPTI  // оптимизация PPA для вращения
 /**
  * Avoid tering related configurations, can be adjusted by users.
  *
@@ -74,7 +79,7 @@
 #define LVGL_PORT_AVOID_TEARING_MODE            (CONFIG_LVGL_PORT_AVOID_TEARING_MODE)
                                                         // Valid if using ESP-IDF
 #else
-#define LVGL_PORT_AVOID_TEARING_MODE            (3)     // Valid if using Arduino
+#define LVGL_PORT_AVOID_TEARING_MODE            (2)     // Valid if using Arduino
 #endif
 
 #if LVGL_PORT_AVOID_TEARING_MODE != 0
@@ -92,7 +97,7 @@
 #define LVGL_PORT_ROTATION_DEGREE               (CONFIG_LVGL_PORT_ROTATION_DEGREE)
                                                         // Valid if using ESP-IDF
 #else
-#define LVGL_PORT_ROTATION_DEGREE               (0)     // Valid if using Arduino
+#define LVGL_PORT_ROTATION_DEGREE               (90)     // Valid if using Arduino
 #endif
 
 /**

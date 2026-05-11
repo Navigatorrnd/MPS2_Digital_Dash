@@ -16,8 +16,8 @@ class Display_Handler
 public:
     Display_Handler();
     void DisplayInit(String ve);
-    void DisplayTickDiD(mps_general_params_t params_did);
-    void DisplayTickODO(mps_odom_params_t params_odo, int currTrip);
+    void DisplayTickDiD(mps_general_params_t params_did );
+    void DisplayTickODO(mps_odom_params_t params_odo, int currTrip, mps_etacs_params_t etacs_params, int dimmer);
     void DisplayTickSpeed(mps_general_params_t params_did);
     void setActiveTrip(int curr);
 private:

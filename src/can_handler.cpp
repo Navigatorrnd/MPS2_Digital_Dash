@@ -15,6 +15,7 @@ mps_autoac_params_t Can_Handler::current_autoac_params;
 mps_odom_params_t Can_Handler::current_odom_params;
 bool Can_Handler::is_bus_active;
 bool Can_Handler::is_did_active;
+uint32_t Can_Handler::did_active_cnt;
 
 //#define USE_MULTIK
 
@@ -35,6 +36,7 @@ Can_Handler::Can_Handler()
     Serial.println("Can_handler_construct");
     is_bus_active = false;
     is_did_active = false;
+    did_active_cnt = 0;
 }
 
 void Can_Handler::set_mask_filt()
@@ -164,12 +166,16 @@ void Can_Handler::CanHandlerTwaiRestart()
 
 void Can_Handler::taskCanSend()
 {    
-    if(!is_did_active)
-    {
-        sendPid(ID_CLIM_REQ, PID_CLIMAT_TEMP);
-    }
-    else
-    {
+    //Serial.println("CAN0.attachCANInterrupt");
+    // if(!is_did_active)
+    // //if(false)
+    // {
+    //     sendPid(ID_CLIM_REQ, PID_CLIMAT_TEMP);
+    //     Serial.println("CAN0.taskCanSend");
+    // }
+    // else
+    // {
+        //Serial.println("CAN0.taskCanSend");
         switch (pid_iterator)
         {
         case 1:
@@ -194,11 +200,18 @@ void Can_Handler::taskCanSend()
             break;
         }
         pid_iterator++;  
-    }
+    // }
 
 } 
 
 
+void Can_Handler::reset_did_active()
+{
+    if(did_active_cnt>0)        
+        is_did_active = true;
+    else is_did_active = false;
+    did_active_cnt=0;
+}
 void Can_Handler::HandleRxEvent(CAN_FRAME* rxFrame) 
 {
     //Serial.println("HandleRxEvent");
@@ -312,7 +325,8 @@ void Can_Handler::HandleRxEvent(CAN_FRAME* rxFrame)
     // AT-коробка в наличии!
       //bcomp.at_present = 1;
     // Отображение передачи:
-        current_params.at_drive = (uint8_t)rxFrame->data.uint8[2] & 0x0F;
+        current_params.at_drive = ((uint8_t)rxFrame->data.uint8[2] >> 4) & 0x0F;
+        current_params.at_drive_current = (uint8_t)rxFrame->data.uint8[2] & 0x0F;
         break;
 
     case ID_MPS_STEER:
@@ -334,6 +348,7 @@ void Can_Handler::HandleRxEvent(CAN_FRAME* rxFrame)
 
         current_params.torque = ((uint32_t)rxFrame->data.uint8[0] * 256 + rxFrame->data.uint8[1])/4 - 500;
         is_did_active = true;
+        did_active_cnt++;
         break;
 
     case ID_MPS_DID_TEMP:
@@ -363,6 +378,8 @@ void Can_Handler::HandleRxEvent(CAN_FRAME* rxFrame)
         {
             current_params.odometer = ((int32_t)rxFrame->data.uint8[4] * 256 + (int32_t)rxFrame->data.uint8[5]) * 256 + (int32_t)rxFrame->data.uint8[6];
             //current_params.odometer = current_params.odometer;
+            //Serial.print("ODO");
+            //Serial.println(current_params.odometer);
         }
         if(rxFrame->data.uint8[0]==0x06 
             &&  rxFrame->data.uint8[1]==0x61 
@@ -371,7 +388,7 @@ void Can_Handler::HandleRxEvent(CAN_FRAME* rxFrame)
             //current_params.v_ecu = (float)((rxFrame->data.uint8[3]*256)+rxFrame->data.uint8[4])/1000.0f; 
             
             current_params.v_ecu = (float)rxFrame->data.uint8[3]*18.68/255.0f;
-            Serial.println(current_params.v_ecu );
+            //Serial.println(current_params.v_ecu );
         }
         break;
       
@@ -381,9 +398,10 @@ void Can_Handler::HandleRxEvent(CAN_FRAME* rxFrame)
         //current_etacs_params.other_door = rxFrame->data.uint8[2] & 0x01;      
         current_etacs_params.left_turn = (rxFrame->data.uint8[1] & 0x02);
         current_etacs_params.right_turn = (rxFrame->data.uint8[1] & 0x01);
-        current_etacs_params.head_lamp_lo = (rxFrame->data.uint8[1] & 0x10);
+        current_etacs_params.head_lamp_lo = (rxFrame->data.uint8[1] & 0x20);
         current_etacs_params.position_lamp = (rxFrame->data.uint8[0] & 0x04);
         current_etacs_params.head_lamp_hi = (rxFrame->data.uint8[1] & 0x04);
+        //Serial.println(rxFrame->data.uint8[1]);
         break;
     
     case ID_MPS_AUTOAC:

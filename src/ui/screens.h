@@ -63,6 +63,9 @@ typedef struct _objects_t {
     lv_obj_t *obj21;
     lv_obj_t *rpm;
     lv_obj_t *obj22;
+    lv_obj_t *dimmer;
+    lv_obj_t *position_lamp;
+    lv_obj_t *head_lamp;
 } objects_t;
 
 extern objects_t objects;

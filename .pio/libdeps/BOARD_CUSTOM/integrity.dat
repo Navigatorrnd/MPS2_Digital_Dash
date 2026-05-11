@@ -1,8 +1,9 @@
-gyverlibs/EncButton@^3.7.2
-gyverlibs/GyverTimer @ ^3.2
+https://github.com/esp-arduino-libs/esp-lib-utils.git#v0.2.0
+https://github.com/esp-arduino-libs/ESP32_IO_Expander.git#v1.1.0
 https://github.com/collin80/can_common
 https://github.com/collin80/esp32_can.git
-https://github.com/esp-arduino-libs/ESP32_IO_Expander.git#v1.1.0
-https://github.com/esp-arduino-libs/esp-lib-utils.git#v0.2.0
+yourapiexpert/ATCommands@^0.0.1
 https://github.com/lvgl/lvgl.git#v8.4.0
 file://./libs/ESP32_Display_Panel
+gyverlibs/EncButton@^3.7.2
+gyverlibs/GyverTimer @ ^3.2

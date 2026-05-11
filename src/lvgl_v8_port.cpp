@@ -22,6 +22,8 @@ static TaskHandle_t lvgl_task_handle = nullptr;
 static esp_timer_handle_t lvgl_tick_timer = NULL;
 static void *lvgl_buf[LVGL_PORT_BUFFER_NUM_MAX] = {};
 
+ppa_client_handle_t ppa_handle = NULL;
+
 #if LVGL_PORT_ROTATION_DEGREE != 0
 static void *get_next_frame_buffer(LCD *lcd)
 {
@@ -153,6 +155,77 @@ static inline void copy_pixel_24bpp(uint8_t *to, const uint8_t *from)
         } \
     }
 
+#ifdef PPAOPTI
+__attribute__((always_inline))
+IRAM_ATTR static inline void rotate_copy_pixel(
+    const uint8_t *from, uint8_t *to, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end, uint16_t w,
+    uint16_t h, uint16_t rotate
+)
+{
+
+    ppa_in_pic_blk_config_t ppa_in = {
+        .buffer = from,           // Буфер от LVGL     // понять, передается сюда весь буфер или только фрагмент,
+        .pic_w = x_end - x_start + 1, //800
+        .pic_h = y_end - y_start + 1, //800
+        .block_w = x_end - x_start + 1,   //800            // Т.к. full_refresh = 1, обрабатываем всё сразу
+        .block_h = y_end - y_start + 1,   //800
+        .block_offset_x = 0, 
+        .block_offset_y = 0,
+        .srm_cm = PPA_SRM_COLOR_MODE_RGB565, // Режим из ppa_srm_color_mode_t
+    };
+
+    // 2. Заполнение структуры вывода (out)
+    // Внимание: проверьте структуру ppa_out_pic_blk_config_t, 
+    // обычно там поля называются аналогично (buffer, pic_w и т.д.)
+    ppa_out_pic_blk_config_t ppa_out = {0};
+    ppa_out.buffer = to;      // Выровненный буфер в PSRAM
+    ppa_out.pic_w = w;
+    ppa_out.pic_h = h;
+    ppa_out.block_offset_x = 0;
+    ppa_out.block_offset_y = 0;
+    ppa_out.srm_cm = PPA_SRM_COLOR_MODE_RGB565;
+    ppa_out.buffer_size = 800 * 800 * 2;
+
+    // 3. Основная конфигурация операции
+    ppa_srm_oper_config_t srm_config = {
+        .in = ppa_in,
+        .out = ppa_out,
+        .rotation_angle = PPA_SRM_ROTATION_ANGLE_90,
+        .scale_x = 1.0f,
+        .scale_y = 1.0f,
+        .mirror_x = false,
+        .mirror_y = false,
+        .rgb_swap = false,
+        .byte_swap = false,
+        .alpha_update_mode = PPA_ALPHA_NO_CHANGE,
+        .mode = PPA_TRANS_MODE_BLOCKING, // Ждем завершения прямо в функции
+    };    
+    switch (rotate) {
+        case 90:
+            srm_config.rotation_angle = PPA_SRM_ROTATION_ANGLE_90;
+            break;
+        case 180:
+            srm_config.rotation_angle = PPA_SRM_ROTATION_ANGLE_180;
+            break;
+        case 270:
+            srm_config.rotation_angle = PPA_SRM_ROTATION_ANGLE_270;
+            break;
+        default:
+            break;
+        }
+    //printf("Struct size in: %d, out: %d\n", sizeof(ppa_in), sizeof(ppa_out));
+    esp_cache_msync((void*)from, 800*800*2, ESP_CACHE_MSYNC_FLAG_DIR_C2M);
+
+    // Запускаем аппаратный поворот
+    ppa_do_scale_rotate_mirror(ppa_handle, &srm_config);
+
+    int flags = ESP_CACHE_MSYNC_FLAG_DIR_C2M;
+    esp_cache_msync(to, 800 * 800 * 2, flags);
+    //current_rotated_idx = back_buf_idx;
+        
+
+}
+#else
 __attribute__((always_inline))
 IRAM_ATTR static inline void rotate_copy_pixel(
     const uint8_t *from, uint8_t *to, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end, uint16_t w,
@@ -200,6 +273,7 @@ IRAM_ATTR static inline void rotate_copy_pixel(
     }
     // ESP_LOGI(TAG, "rotate: end, time used:%d", (int)(esp_log_timestamp() - time));
 }
+#endif
 #endif /* LVGL_PORT_ROTATION_DEGREE */
 
 #if LVGL_PORT_AVOID_TEAR
@@ -551,16 +625,30 @@ void rounder_callback(lv_disp_drv_t *drv, lv_area_t *area)
         // round the end of coordinate up to the nearest aligned value
         area->y2 = (area->y2 & ~(y_align - 1)) + y_align - 1;
     }
+    Serial.println("rounder_callback");
+}
+
+
+
+// Инициализация PPA (вызовите в setup)
+void init_ppa() {
+    ppa_client_config_t config = {
+        .oper_type = PPA_OPERATION_SRM, // Режим трансформации (поворот)
+    };
+    Serial.print("ppa_register_client = ");
+    Serial.println(ppa_register_client(&config, &ppa_handle));
+
 }
 
 static lv_disp_t *display_init(LCD *lcd)
 {
+    init_ppa();
     ESP_UTILS_CHECK_FALSE_RETURN(lcd != nullptr, nullptr, "Invalid LCD device");
     ESP_UTILS_CHECK_FALSE_RETURN(lcd->getRefreshPanelHandle() != nullptr, nullptr, "LCD device is not initialized");
 
     static lv_disp_draw_buf_t disp_buf;
     static lv_disp_drv_t disp_drv;
-
+    
     // Alloc draw buffers used by LVGL
     auto lcd_width = lcd->getFrameWidth();
     auto lcd_height = lcd->getFrameHeight();
@@ -782,7 +870,7 @@ bool lvgl_port_init(LCD *lcd, Touch *tp)
     disp = display_init(lcd);
     ESP_UTILS_CHECK_NULL_RETURN(disp, false, "Initialize LVGL display driver failed");
     // Record the initial rotation of the display
-    lv_disp_set_rotation(disp, LV_DISP_ROT_NONE);
+    lv_disp_set_rotation(disp, LV_DISP_ROT_90);
     //lv_disp_set_bg_color(disp, lv_color_hex(0x00000000));
 
     // 1. Получить активный экран
