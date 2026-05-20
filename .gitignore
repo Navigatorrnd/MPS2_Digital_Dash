@@ -42,3 +42,6 @@
 .pio/*
 .vscode/*
 
+.pio/build/project.checksum
+.pio/libdeps/BOARD_CUSTOM/integrity.dat
+.vscode/c_cpp_properties.json

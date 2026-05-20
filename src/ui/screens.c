@@ -304,6 +304,16 @@ void create_screen_main() {
             lv_label_set_text(obj, "P");
         }
         {
+            // AT_STATE_REQ
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.at_state_req = obj;
+            lv_obj_set_pos(obj, 446, 342);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_obj_set_style_text_font(obj, &lv_font_montserrat_34, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(obj, "P");
+        }
+        {
             lv_obj_t *obj = lv_obj_create(parent_obj);
             objects.obj4 = obj;
             lv_obj_set_pos(obj, 128, 419);
@@ -612,6 +622,16 @@ void create_screen_main() {
             lv_obj_set_size(obj, 20, 20);
             lv_led_set_color(obj, lv_color_hex(0xfff7ff00));
             lv_led_set_brightness(obj, 2);
+        }
+        {
+            // DIMMER_STATE
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.dimmer_state = obj;
+            lv_obj_set_pos(obj, 591, 648);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_obj_set_style_text_font(obj, &lv_font_montserrat_34, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(obj, "0");
         }
         {
             // dimmer

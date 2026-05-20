@@ -17,9 +17,12 @@ public:
     Display_Handler();
     void DisplayInit(String ve);
     void DisplayTickDiD(mps_general_params_t params_did );
-    void DisplayTickODO(mps_odom_params_t params_odo, int currTrip, mps_etacs_params_t etacs_params, int dimmer);
+    void DisplayTickODO(mps_odom_params_t params_odo, int currTrip, mps_etacs_params_t etacs_params);
     void DisplayTickSpeed(mps_general_params_t params_did);
     void setActiveTrip(int curr);
+    void setDimmer(int _dimmer){ dimmer = _dimmer; };
+    void setEngtempAlarm(bool alarm);
+    void setATFTempAlarm(bool alarm);
 private:
     //U8G2 u8g2;//(&u8g2_cb_r0, /* cs=*/ 21, /* dc=*/ 17, /* reset=*/ 16);
 
@@ -27,6 +30,7 @@ private:
     int old_speed;
     bool tripAisActive;
     bool tripBisActive;
+    int dimmer;
 };
 
 #endif

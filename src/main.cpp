@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: CC0-1.0
  */
-#define VERSION "0.0.2b" 
+#define VERSION "0.0.3rc" 
 #include <Arduino.h>
 #include "esp_core_dump.h"
 //#include "esp_panel_board_custom_conf.h"
@@ -19,6 +19,9 @@
 // #include "nvs.h"
 
 #include <Preferences.h>
+#include "ATCommands.h"
+
+ATCommands AT;
 
 #define BEEPER_PIN 6
 #define BUTTON_PIN 10
@@ -50,6 +53,8 @@ GTimer ignCheckTimer(MS);
 GTimer poweroffTimer(MS);
 GTimer saveTimer(MS);
 GTimer resetActiveTripTimer(MS);
+GTimer alarmCheckTimer(MS);
+GTimer beeperOffTimer(MS);
 
 GTimer twaiCheckTimer(MS);   
 
@@ -62,6 +67,112 @@ Preferences saved_params;
 #define LOWLIGHT_SENS 2900
 #define HIGHLIGHT_SENS 1000 
 int light_sens; //значение внешнего сенсора освещения
+
+int bright_low;
+int bright_high;
+int lightsens_low;
+int lightsens_high;
+int alarm_engine_temp;
+int alarm_atf_temp;
+
+#define WORKING_BUFFER_SIZE 255
+
+bool at_read_cmd_setbright(ATCommands *sender)
+{
+    if (String(bright_low).length() > 0 && String(bright_high).length() > 0 && String(lightsens_low).length() > 0 && String(lightsens_high).length() > 0)
+    {
+        sender->serial->print(String(bright_low));
+        sender->serial->print(" ");
+        sender->serial->println(String(bright_high));
+        sender->serial->print(String(lightsens_low));
+        sender->serial->print(" ");
+        sender->serial->println(String(lightsens_high));
+        return true; // tells ATCommands to print OK
+    }
+    return false;
+}
+bool at_test_cmd_setbright(ATCommands *sender)
+{
+    sender->serial->print(sender->command);
+    Serial.println(F("Установка яркости экрана. "));
+    Serial.println(F("Первый параметр минимальная яркость (уровень затемнения). "));
+    Serial.println(F("Второй параметр - максимальаня яркость (обычно 0)."));
+    Serial.println(F("Третий и четвертый параметры - уровень сенсора при минимальном и максимальном освещении"));
+    
+    return true; // tells ATCommands to print OK
+}
+
+bool at_write_cmd_setbright(ATCommands *sender) //
+{
+    // sender->next() is NULL terminated ('\0') if there are no more parameters
+    // so check for that or a length of 0.
+    bright_low = sender->next().toInt();
+    bright_high = sender->next().toInt();
+    lightsens_low = sender->next().toInt();
+    lightsens_high = sender->next().toInt();
+    return true; // tells ATCommands to print OK
+}
+bool at_test_cmd_save(ATCommands *sender) 
+{
+    sender->serial->print(sender->command);
+    Serial.println(F("Сохраняет все параметры и пробег в NVS. "));
+    Serial.println(F("NVS при этом закрывается и открывается заново"));
+    return true;
+}
+
+bool at_run_cmd_save(ATCommands *sender) //
+{
+    // sender->next() is NULL terminated ('\0') if there are no more parameters
+    // so check for that or a length of 0.
+    saved_params.putInt("bright_low", bright_low); 
+    saved_params.putInt("bright_high", bright_high); 
+    saved_params.putInt("lightsens_low", lightsens_low); 
+    saved_params.putInt("lightsens_high", lightsens_high);
+    mps_odom_params_t params_odo = can_handler.get_odom_params();
+    saved_params.putDouble("tripA", params_odo.trip_a); 
+    saved_params.putDouble("tripB", params_odo.trip_b);     
+    saved_params.putInt("alarm_engine_temp", alarm_engine_temp); 
+    saved_params.putInt("alarm_atf_temp", alarm_atf_temp);
+    saved_params.end();
+    saved_params.begin("params", false);
+    return true; // tells ATCommands to print OK
+}
+bool at_read_cmd_setlimit(ATCommands *sender)
+{
+    if (String(alarm_engine_temp).length() > 0 && String(alarm_atf_temp).length() > 0 )
+    {
+        sender->serial->print(String(alarm_engine_temp));
+        sender->serial->print(" ");
+        sender->serial->println(String(alarm_atf_temp));
+        return true; // tells ATCommands to print OK
+    }
+    return false;
+}
+bool at_test_cmd_setlimit(ATCommands *sender)
+{
+    sender->serial->print(sender->command);
+    Serial.println(F("Установка лимитов предупреждения. "));
+    Serial.println(F("Первый параметр - лимит температуры двигателя. "));
+    Serial.println(F("Второй параметр - лимит температуры коробки."));
+    
+    return true; // tells ATCommands to print OK
+}
+
+bool at_write_cmd_setlimit(ATCommands *sender) //
+{
+    // sender->next() is NULL terminated ('\0') if there are no more parameters
+    // so check for that or a length of 0.
+    alarm_engine_temp = sender->next().toInt();
+    alarm_atf_temp = sender->next().toInt();
+    return true; // tells ATCommands to print OK
+}
+
+static at_command_t commands[] = {
+    {"+BRIGHT", NULL, at_test_cmd_setbright, at_read_cmd_setbright, at_write_cmd_setbright},
+    {"+SAVE", at_run_cmd_save, at_test_cmd_save, NULL, NULL},
+    {"+LIMIT", NULL, at_test_cmd_setlimit, at_read_cmd_setlimit, at_write_cmd_setlimit},
+};
+
 
 void printSavedCoreDump() {
     // 1. Проверяем, есть ли данные
@@ -140,11 +251,9 @@ void setup()
     displayOdoTimer.setInterval(1000); 
     ignCheckTimer.setTimeout(15000);
     didActiveCheckTimer.setInterval(2000);
+    alarmCheckTimer.setInterval(5000);
 
-
-
-
-    Serial.println("Setup complete");
+    
     timing = millis();
     twaiCheckTimer.setTimeout(10000);
 
@@ -164,12 +273,20 @@ void setup()
     saved_params.begin("params", false);
     can_handler.set_tripA(saved_params.getDouble("tripA", 0) );
     can_handler.set_tripB(saved_params.getDouble("tripB", 0) );
+    bright_high = saved_params.getInt("bright_high", 0);
+    bright_low = saved_params.getInt("bright_low", 100); 
+    lightsens_high = saved_params.getInt("lightsens_high", HIGHLIGHT_SENS);
+    lightsens_low = saved_params.getInt("lightsens_low", LOWLIGHT_SENS);     
+    alarm_atf_temp = saved_params.getInt("alarm_atf_temp", 90);
+    alarm_engine_temp = saved_params.getInt("alarm_engine_temp", 90);    
+
 
     Serial.println("loadScreen MAIN");
     lvgl_port_lock(-1);
     loadScreen(SCREEN_ID_MAIN);
     lvgl_port_unlock(); 
-    
+    AT.begin(&Serial, commands, sizeof(commands), WORKING_BUFFER_SIZE);
+    Serial.println("Setup complete");
 }
 
 void loop()
@@ -215,7 +332,33 @@ void loop()
     // Serial.print("<");
     // Serial.print(millis());
     //Serial.print(digitalRead(BUTTON_PIN));
-    btn.tick();
+
+    AT.update();
+
+    if(alarmCheckTimer.isReady())
+    {
+        if(can_handler.get_params().t_engine >alarm_engine_temp)
+        {
+            display.setEngtempAlarm(true);
+            beeperOffTimer.setTimeout(500);
+            digitalWrite(BEEPER_PIN, HIGH);
+        }
+        else display.setEngtempAlarm(false);
+        if(can_handler.get_params().t_engine >alarm_atf_temp)
+        {
+            display.setATFTempAlarm(true);
+            beeperOffTimer.setTimeout(500);
+            digitalWrite(BEEPER_PIN, HIGH);
+        }
+        else display.setATFTempAlarm(false);
+    }
+
+    if(beeperOffTimer.isReady())
+    {
+        digitalWrite(BEEPER_PIN, LOW);
+    }
+
+    btn.tick();    
     if (btn.click())
     {
         Serial.println("click");
@@ -264,8 +407,8 @@ void loop()
     if(displayOdoTimer.isReady())
     {
         int ss = micros();
-        display.DisplayTickODO(can_handler.get_odom_params(), active_trip, can_handler.get_etacs_params(), light_sens);  
-
+        display.DisplayTickODO(can_handler.get_odom_params(), active_trip, can_handler.get_etacs_params());  
+        display.setDimmer(light_sens);
     }
 
     if(can_handler.get_bus_active())
@@ -293,9 +436,9 @@ void loop()
         Serial.println(light_sens);
         // if(light_sens > 3000) light_sens = 0;
         // else 
-        if (light_sens <= HIGHLIGHT_SENS) light_sens = 0;
-        else if (light_sens >= LOWLIGHT_SENS) light_sens = 100;        
-        else light_sens = (light_sens - HIGHLIGHT_SENS) * 100 / (LOWLIGHT_SENS-HIGHLIGHT_SENS); // Умножаем перед делением, чтобы не потерять точность
+        if (light_sens <= lightsens_high) light_sens = bright_high;
+        else if (light_sens >= lightsens_low) light_sens = bright_low;        
+        else light_sens = (light_sens - lightsens_high) * bright_low / (lightsens_low-lightsens_high); // Умножаем перед делением, чтобы не потерять точность
         Serial.print("light = ");
         Serial.println(light_sens);
     }

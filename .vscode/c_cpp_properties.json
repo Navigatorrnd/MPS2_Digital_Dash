@@ -8,6 +8,8 @@
         {
             "name": "PlatformIO",
             "includePath": [
+                "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/Preferences/src",
+                "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/ATCommands/src",
                 "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/ESP32_CAN/src",
                 "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/can_common/src",
                 "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/GyverTimer/src",
@@ -277,7 +279,6 @@
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/NetworkClientSecure/src",
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/OpenThread/src",
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/PPP/src",
-                "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/Preferences/src",
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/RainMaker/src",
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/SD/src",
                 "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/SD_MMC/src",
@@ -298,6 +299,8 @@
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "path": [
+                    "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/Preferences/src",
+                    "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/ATCommands/src",
                     "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/ESP32_CAN/src",
                     "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/can_common/src",
                     "/home/navigator/Документы/PlatformIO/Projects/CAN_Indicator_ESP32P4/.pio/libdeps/BOARD_CUSTOM/GyverTimer/src",
@@ -567,7 +570,6 @@
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/NetworkClientSecure/src",
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/OpenThread/src",
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/PPP/src",
-                    "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/Preferences/src",
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/RainMaker/src",
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/SD/src",
                     "/home/navigator/.platformio/packages/framework-arduinoespressif32@src-c70e18e68e72210271f8e718e0b08d3d/libraries/SD_MMC/src",

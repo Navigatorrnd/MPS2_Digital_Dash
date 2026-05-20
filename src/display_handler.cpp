@@ -66,6 +66,8 @@ void Display_Handler::DisplayTickDiD(mps_general_params_t params_did)
     lv_label_set_text(objects.torq, String(params_did.torque).c_str());
 
     lv_label_set_text(objects.at_state, String(AtState_to_str(params_did.at_drive)).c_str());
+    lv_label_set_text(objects.at_state_req, String(AtState_to_str(params_did.at_drive_current)).c_str());
+    lv_label_set_text(objects.eng_temp, String(params_did.t_engine).c_str());
     lv_label_set_text(objects.eng_temp, String(params_did.t_engine).c_str());
     lv_label_set_text(objects.atf_temp, String(params_did.t_akpp).c_str());
     lv_label_set_text(objects.voltage, String(params_did.v_ecu, 1).c_str());
@@ -78,7 +80,7 @@ void Display_Handler::DisplayTickDiD(mps_general_params_t params_did)
 
 
 
-void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo, int currTrip,  mps_etacs_params_t etacs_params, int dimmer)
+void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo, int currTrip,  mps_etacs_params_t etacs_params)
 {
     lvgl_port_lock(-1);
     lv_label_set_text(objects.odo, String(params_odo.odometer).c_str());
@@ -119,6 +121,7 @@ void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo, int currTrip,
         
     }
     else lv_led_set_brightness(objects.head_lamp, 2);
+    lv_label_set_text(objects.dimmer_state, String(dimmer).c_str());
     //Serial.println(etacs_params.head_lamp_lo);
     lvgl_port_unlock();
 };
@@ -196,4 +199,26 @@ void Display_Handler::setActiveTrip(int curr)
         tripBisActive = true;
         tripAisActive = false;
     }
+}
+
+void Display_Handler::setEngtempAlarm(bool alarm)
+{
+    if(alarm)
+    {
+        lv_obj_set_style_bg_opa(objects.eng_temp, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(objects.eng_temp, lv_color_hex(0xffb00000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+    else
+        lv_obj_set_style_bg_color(objects.eng_temp, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT); 
+}
+
+void Display_Handler::setATFTempAlarm(bool alarm)
+{
+    if(alarm)
+    {
+        lv_obj_set_style_bg_opa(objects.atf_temp, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(objects.atf_temp, lv_color_hex(0xffb00000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+    else
+        lv_obj_set_style_bg_color(objects.atf_temp, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT); 
 }
