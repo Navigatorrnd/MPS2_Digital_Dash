@@ -8,7 +8,7 @@
 #include "esp_core_dump.h"
 //#include "esp_panel_board_custom_conf.h"
 //#include "esp_panel_drivers_conf.h"
-
+#define LV_LVGL_H_INCLUDE_SIMPLE
 
 #include "GyverTimer.h"
 #include "EncButton.h"
@@ -19,7 +19,7 @@
 // #include "nvs.h"
 
 #include <Preferences.h>
-#include "ATCommands.h"
+#include "./ATCommands/ATCommands.h"
 
 ATCommands AT;
 
@@ -98,7 +98,8 @@ bool at_test_cmd_setbright(ATCommands *sender)
     Serial.println(F("Первый параметр минимальная яркость (уровень затемнения). "));
     Serial.println(F("Второй параметр - максимальаня яркость (обычно 0)."));
     Serial.println(F("Третий и четвертый параметры - уровень сенсора при минимальном и максимальном освещении"));
-    
+    //AT+BRIGHT=120,0,2900,1000 //
+    //AT+BRIGHT?
     return true; // tells ATCommands to print OK
 }
 
@@ -135,6 +136,7 @@ bool at_run_cmd_save(ATCommands *sender) //
     saved_params.putInt("alarm_atf_temp", alarm_atf_temp);
     saved_params.end();
     saved_params.begin("params", false);
+    Serial.println(F("Параметры сохранены"));
     return true; // tells ATCommands to print OK
 }
 bool at_read_cmd_setlimit(ATCommands *sender)
@@ -478,7 +480,7 @@ void loop()
         }
         else
         {
-            ignCheckTimer.setTimeout(5000);  
+            ignCheckTimer.setTimeout(5000); 
         }    
     }
     if(poweroffTimer.isReady())
@@ -492,6 +494,10 @@ void loop()
         {
             ignCheckTimer.setTimeout(5000);  
             digitalWrite(POWERKEY_PIN, 1);
+
+            saved_params.begin("params", false);
+
+            Serial.println("poweroffTimer DEactivate-----------------------------------------------------------------------------");
         }    
     }
 

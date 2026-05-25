@@ -262,8 +262,9 @@ void Can_Handler::HandleRxEvent(CAN_FRAME* rxFrame)
     #endif
       if((uint8_t)rxFrame->data.uint8[0] == 0x21 )//&& (uint8_t)rxFrame->data.uint8[1]==0x00 )
       {
-
-          current_params.t_akpp = (rxFrame->data.uint8[2]-40); 
+          int  t_akpp = (rxFrame->data.uint8[2]-40); 
+          if(!(t_akpp<0 && current_params.t_engine > 0)) 
+            current_params.t_akpp = t_akpp; 
           req_more = false;
           /*Serial.print("req_more");
           Serial.println(req_more);

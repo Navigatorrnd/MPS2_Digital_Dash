@@ -91,12 +91,12 @@ void Display_Handler::DisplayTickODO(mps_odom_params_t params_odo, int currTrip,
 
     if(currTrip == 1)
     {
-        lv_obj_set_style_bg_color(objects.trip_a, lv_color_hex(0xff333333), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(objects.trip_a, lv_color_hex(0xff444444), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_color(objects.trip_b, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     }
     else if(currTrip == 2)
     {
-        lv_obj_set_style_bg_color(objects.trip_b, lv_color_hex(0xff333333), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(objects.trip_b, lv_color_hex(0xff444444), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_color(objects.trip_a, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     }
     else 
@@ -136,7 +136,7 @@ void set_speedometr_value(void * indicator, int32_t v) {
 
 void Display_Handler::DisplayTickSpeed(mps_general_params_t params_did)
 {
-    
+    lvgl_port_lock(-1);
     lv_anim_t a;
     lv_anim_init(&a);
     lv_anim_set_var(&a, screen_main_state.indicator);        // Объект, который передастся в колбэк
@@ -146,6 +146,7 @@ void Display_Handler::DisplayTickSpeed(mps_general_params_t params_did)
     lv_anim_set_path_cb(&a, lv_anim_path_linear); 
     lv_anim_start(&a);
     old_speed = params_did.speed;
+    lvgl_port_unlock();
 }  	
 
 String AtState_to_str(uint8_t at_drive)

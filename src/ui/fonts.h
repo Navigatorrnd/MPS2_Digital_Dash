@@ -7,9 +7,12 @@
 extern "C" {
 #endif
 
-extern const lv_font_t ui_font_segment7_120;
-extern const lv_font_t ui_font_mononoki;
-extern const lv_font_t ui_font_mononoki120;
+extern const lv_font_t ui_font_dseg7_100;
+extern const lv_font_t ui_font_dseg14_clas_bold_100;
+extern const lv_font_t ui_font_dseg7_clas_it_35;
+extern const lv_font_t ui_font_montserrat_medium_56;
+extern const lv_font_t ui_font_montserrat_medium_64;
+extern const lv_font_t ui_font_mono_noki_bold_65;
 
 #ifndef EXT_FONT_DESC_T
 #define EXT_FONT_DESC_T
