@@ -204,6 +204,7 @@ void Display_Handler::setActiveTrip(int curr)
 
 void Display_Handler::setEngtempAlarm(bool alarm)
 {
+    lvgl_port_lock(-1);
     if(alarm)
     {
         lv_obj_set_style_bg_opa(objects.eng_temp, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -211,10 +212,12 @@ void Display_Handler::setEngtempAlarm(bool alarm)
     }
     else
         lv_obj_set_style_bg_color(objects.eng_temp, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT); 
+    lvgl_port_unlock();
 }
 
 void Display_Handler::setATFTempAlarm(bool alarm)
 {
+    lvgl_port_lock(-1);
     if(alarm)
     {
         lv_obj_set_style_bg_opa(objects.atf_temp, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -222,4 +225,5 @@ void Display_Handler::setATFTempAlarm(bool alarm)
     }
     else
         lv_obj_set_style_bg_color(objects.atf_temp, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT); 
+    lvgl_port_unlock();
 }

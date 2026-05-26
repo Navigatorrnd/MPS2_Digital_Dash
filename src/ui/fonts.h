@@ -10,9 +10,8 @@ extern "C" {
 extern const lv_font_t ui_font_dseg7_100;
 extern const lv_font_t ui_font_dseg14_clas_bold_100;
 extern const lv_font_t ui_font_dseg7_clas_it_35;
-extern const lv_font_t ui_font_montserrat_medium_56;
-extern const lv_font_t ui_font_montserrat_medium_64;
 extern const lv_font_t ui_font_mono_noki_bold_65;
+extern const lv_font_t ui_font_mono_noki_bold_56;
 
 #ifndef EXT_FONT_DESC_T
 #define EXT_FONT_DESC_T

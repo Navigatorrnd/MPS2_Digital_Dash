@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: CC0-1.0
  */
-#define VERSION "0.0.3rc" 
+#define VERSION "1.0.5b" 
 #include <Arduino.h>
 #include "esp_core_dump.h"
 //#include "esp_panel_board_custom_conf.h"
@@ -55,6 +55,7 @@ GTimer saveTimer(MS);
 GTimer resetActiveTripTimer(MS);
 GTimer alarmCheckTimer(MS);
 GTimer beeperOffTimer(MS);
+GTimer dimmerCalcTimer(MS);
 
 GTimer twaiCheckTimer(MS);   
 
@@ -66,7 +67,7 @@ Preferences saved_params;
 
 #define LOWLIGHT_SENS 2900
 #define HIGHLIGHT_SENS 1000 
-int light_sens; //значение внешнего сенсора освещения
+int dimmer; //значение внешнего сенсора освещения
 
 int bright_low;
 int bright_high;
@@ -167,6 +168,8 @@ bool at_write_cmd_setlimit(ATCommands *sender) //
     alarm_engine_temp = sender->next().toInt();
     alarm_atf_temp = sender->next().toInt();
     return true; // tells ATCommands to print OK
+    // AT+LIMIT=90, 90
+
 }
 
 static at_command_t commands[] = {
@@ -226,6 +229,24 @@ void printSavedCoreDump() {
     // esp_core_dump_image_erase();
 }
 
+void dimmer_handler(bool first)
+{
+    int light_sens_new = analogRead(LIGHTSENS_PIN);
+    //Serial.print("light sens= ");
+    //Serial.println(light_sens_new);
+    // if(light_sens > 3000) light_sens = 0;
+    // else 
+    if (light_sens_new <= lightsens_high) light_sens_new = bright_high;
+    else if (light_sens_new >= lightsens_low) light_sens_new = bright_low;        
+    else light_sens_new = (light_sens_new - lightsens_high) * bright_low / (lightsens_low-lightsens_high); // Умножаем перед делением, чтобы не потерять точность
+    if(dimmer < light_sens_new) dimmer++;
+    if(dimmer > light_sens_new) dimmer--;
+    if(first) dimmer = light_sens_new;
+    //Serial.print("dimmer= ");
+    //Serial.println(dimmer);
+}
+
+
 void setup()
 {
     //delay(2000);
@@ -254,6 +275,7 @@ void setup()
     ignCheckTimer.setTimeout(15000);
     didActiveCheckTimer.setInterval(2000);
     alarmCheckTimer.setInterval(5000);
+    dimmerCalcTimer.setInterval(300);
 
     
     timing = millis();
@@ -288,6 +310,7 @@ void setup()
     loadScreen(SCREEN_ID_MAIN);
     lvgl_port_unlock(); 
     AT.begin(&Serial, commands, sizeof(commands), WORKING_BUFFER_SIZE);
+    dimmer_handler(true);
     Serial.println("Setup complete");
 }
 
@@ -346,7 +369,7 @@ void loop()
             digitalWrite(BEEPER_PIN, HIGH);
         }
         else display.setEngtempAlarm(false);
-        if(can_handler.get_params().t_engine >alarm_atf_temp)
+        if(can_handler.get_params().t_akpp >alarm_atf_temp)
         {
             display.setATFTempAlarm(true);
             beeperOffTimer.setTimeout(500);
@@ -393,7 +416,11 @@ void loop()
     {
         can_handler.calculate();
         //taskPrintParams();
-    }     
+    }   
+    if(dimmerCalcTimer.isReady())
+    {
+        dimmer_handler(false);
+    }  
     if(displayTimer.isReady())
     {
         int ss = micros();
@@ -410,7 +437,7 @@ void loop()
     {
         int ss = micros();
         display.DisplayTickODO(can_handler.get_odom_params(), active_trip, can_handler.get_etacs_params());  
-        display.setDimmer(light_sens);
+        display.setDimmer(dimmer);
     }
 
     if(can_handler.get_bus_active())
@@ -432,17 +459,6 @@ void loop()
     {
         can_handler.reset_did_active();      
 
-
-        light_sens = analogRead(LIGHTSENS_PIN);
-        Serial.print("light = ");
-        Serial.println(light_sens);
-        // if(light_sens > 3000) light_sens = 0;
-        // else 
-        if (light_sens <= lightsens_high) light_sens = bright_high;
-        else if (light_sens >= lightsens_low) light_sens = bright_low;        
-        else light_sens = (light_sens - lightsens_high) * bright_low / (lightsens_low-lightsens_high); // Умножаем перед делением, чтобы не потерять точность
-        Serial.print("light = ");
-        Serial.println(light_sens);
     }
     if(ignCheckTimer.isReady())
     {
