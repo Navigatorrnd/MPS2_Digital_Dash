@@ -18,7 +18,7 @@ public:
     void DisplayInit(String ve);
     void DisplayTickDiD(mps_general_params_t params_did );
     void DisplayTickODO(mps_odom_params_t params_odo, int currTrip, mps_etacs_params_t etacs_params);
-    void DisplayTickSpeed(mps_general_params_t params_did);
+    void DisplayTickSpeed(mps_general_params_t params_did, int speedcorrect);
     void setActiveTrip(int curr);
     void setDimmer(int _dimmer){ dimmer = _dimmer; };
     void setEngtempAlarm(bool alarm);

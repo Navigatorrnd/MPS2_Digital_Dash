@@ -61,7 +61,7 @@ void Display_Handler::DisplayTickDiD(mps_general_params_t params_did)
     //tick_cnt++;
     lvgl_port_lock(-1);
     //lv_meter_set_indicator_value(objects.speedometr, screen_main_state.indicator, params_did.speed);
-    lv_label_set_text(objects.speed, String(params_did.speed).c_str());
+    //lv_label_set_text(objects.speed, String(params_did.speed).c_str());
     lv_label_set_text(objects.rpm, String(params_did.rpm).c_str());
     lv_label_set_text(objects.torq, String(params_did.torque).c_str());
 
@@ -134,18 +134,22 @@ void set_speedometr_value(void * indicator, int32_t v) {
     lvgl_port_unlock();
 }
 
-void Display_Handler::DisplayTickSpeed(mps_general_params_t params_did)
+void Display_Handler::DisplayTickSpeed(mps_general_params_t params_did, int speedcorrect)
 {
+    int speed = params_did.speed * (speedcorrect/100.0f);
     lvgl_port_lock(-1);
-    lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_var(&a, screen_main_state.indicator);        // Объект, который передастся в колбэк
-    lv_anim_set_values(&a, old_speed, params_did.speed); // Откуда и до скольки
-    lv_anim_set_time(&a, 200);                // Длительность в мс (напр. 500мс)
-    lv_anim_set_exec_cb(&a, set_speedometr_value); // Наша функция выше
-    lv_anim_set_path_cb(&a, lv_anim_path_linear); 
-    lv_anim_start(&a);
-    old_speed = params_did.speed;
+    lv_meter_set_indicator_value(objects.speedometr, screen_main_state.indicator, params_did.speed);
+    lv_label_set_text(objects.speed, String(speed).c_str());
+    // lv_anim_del(screen_main_state.indicator, set_speedometr_value);
+    // lv_anim_t a;
+    // lv_anim_init(&a);
+    // lv_anim_set_var(&a, screen_main_state.indicator);        // Объект, который передастся в колбэк
+    // lv_anim_set_values(&a, old_speed, speed); // Откуда и до скольки
+    // lv_anim_set_time(&a, 2000);                // Длительность в мс (напр. 500мс)
+    // lv_anim_set_exec_cb(&a, set_speedometr_value); // Наша функция выше
+    // lv_anim_set_path_cb(&a, lv_anim_path_linear); 
+    // lv_anim_start(&a);
+    // old_speed = speed;
     lvgl_port_unlock();
 }  	
 

@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: CC0-1.0
  */
-#define VERSION "1.0.5b" 
+#define VERSION "1.0.6" 
 #include <Arduino.h>
 #include "esp_core_dump.h"
 //#include "esp_panel_board_custom_conf.h"
@@ -75,6 +75,7 @@ int lightsens_low;
 int lightsens_high;
 int alarm_engine_temp;
 int alarm_atf_temp;
+int speedcorrect;
 
 #define WORKING_BUFFER_SIZE 255
 
@@ -135,6 +136,7 @@ bool at_run_cmd_save(ATCommands *sender) //
     saved_params.putDouble("tripB", params_odo.trip_b);     
     saved_params.putInt("alarm_engine_temp", alarm_engine_temp); 
     saved_params.putInt("alarm_atf_temp", alarm_atf_temp);
+    saved_params.putInt("speedcorrect", speedcorrect);
     saved_params.end();
     saved_params.begin("params", false);
     Serial.println(F("Параметры сохранены"));
@@ -172,10 +174,42 @@ bool at_write_cmd_setlimit(ATCommands *sender) //
 
 }
 
+bool at_read_cmd_speedcorrect(ATCommands *sender)
+{
+    if (String(speedcorrect).length() > 0)
+    {
+        sender->serial->print(String(speedcorrect));
+        return true; // tells ATCommands to print OK
+    }
+    return false;
+    //AT+SPDCORR?
+}
+bool at_test_cmd_speedcorrect(ATCommands *sender)
+{
+    sender->serial->print(sender->command);
+    Serial.println(F("Установка поправки скорости. "));
+    Serial.println(F("Задается как проценты от текущего значения. "));
+    Serial.println(F("Например 98 - уменьшить на 2 процента, 102 - увеличить на 2 процента."));
+    
+    return true; // tells ATCommands to print OK
+    //AT+SPDCORR=?
+}
+
+bool at_write_cmd_speedcorrect(ATCommands *sender) //
+{
+    // sender->next() is NULL terminated ('\0') if there are no more parameters
+    // so check for that or a length of 0.
+    speedcorrect = sender->next().toInt();
+    return true; // tells ATCommands to print OK
+    // AT+SPDCORR=100
+
+}
+
 static at_command_t commands[] = {
     {"+BRIGHT", NULL, at_test_cmd_setbright, at_read_cmd_setbright, at_write_cmd_setbright},
     {"+SAVE", at_run_cmd_save, at_test_cmd_save, NULL, NULL},
     {"+LIMIT", NULL, at_test_cmd_setlimit, at_read_cmd_setlimit, at_write_cmd_setlimit},
+    {"+SPDCORR", NULL, at_test_cmd_speedcorrect, at_read_cmd_speedcorrect, at_write_cmd_speedcorrect},
 };
 
 
@@ -303,6 +337,7 @@ void setup()
     lightsens_low = saved_params.getInt("lightsens_low", LOWLIGHT_SENS);     
     alarm_atf_temp = saved_params.getInt("alarm_atf_temp", 90);
     alarm_engine_temp = saved_params.getInt("alarm_engine_temp", 90);    
+    speedcorrect = saved_params.getInt("speedcorrect", 98);   
 
 
     Serial.println("loadScreen MAIN");
@@ -424,13 +459,13 @@ void loop()
     if(displayTimer.isReady())
     {
         int ss = micros();
-        can_handler.get_etacs_params();
+        //can_handler.get_etacs_params();
         display.DisplayTickDiD(can_handler.get_params());
         // Serial.print("++");
         // Serial.print(micros()-ss);
         // Serial.println("++");
 
-        display.DisplayTickSpeed(can_handler.get_params());
+        display.DisplayTickSpeed(can_handler.get_params(), speedcorrect);
         //display.u8g2display(can_handler.get_params(), can_handler.get_wheel_angle()); 
     } 
     if(displayOdoTimer.isReady())
