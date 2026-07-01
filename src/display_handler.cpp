@@ -136,7 +136,7 @@ void set_speedometr_value(void * indicator, int32_t v) {
 
 void Display_Handler::DisplayTickSpeed(mps_general_params_t params_did, int speedcorrect)
 {
-    int speed = params_did.speed * (speedcorrect/100.0f);
+    int speed = (params_did.speed * speedcorrect + 50) / 100;
     lvgl_port_lock(-1);
     lv_meter_set_indicator_value(objects.speedometr, screen_main_state.indicator, params_did.speed);
     lv_label_set_text(objects.speed, String(speed).c_str());

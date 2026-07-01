@@ -201,7 +201,7 @@ bool at_write_cmd_speedcorrect(ATCommands *sender) //
     // so check for that or a length of 0.
     speedcorrect = sender->next().toInt();
     return true; // tells ATCommands to print OK
-    // AT+SPDCORR=100
+    // AT+SPDCORR=102
 
 }
 
