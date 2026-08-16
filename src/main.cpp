@@ -137,8 +137,6 @@ bool at_run_cmd_save(ATCommands *sender) //
     saved_params.putInt("alarm_engine_temp", alarm_engine_temp); 
     saved_params.putInt("alarm_atf_temp", alarm_atf_temp);
     saved_params.putInt("speedcorrect", speedcorrect);
-    saved_params.end();
-    saved_params.begin("params", false);
     Serial.println(F("Параметры сохранены"));
     return true; // tells ATCommands to print OK
 }
@@ -178,7 +176,7 @@ bool at_read_cmd_speedcorrect(ATCommands *sender)
 {
     if (String(speedcorrect).length() > 0)
     {
-        sender->serial->print(String(speedcorrect));
+        sender->serial->println(String(speedcorrect));
         return true; // tells ATCommands to print OK
     }
     return false;
@@ -201,7 +199,7 @@ bool at_write_cmd_speedcorrect(ATCommands *sender) //
     // so check for that or a length of 0.
     speedcorrect = sender->next().toInt();
     return true; // tells ATCommands to print OK
-    // AT+SPDCORR=102
+    // AT+SPDCORR=102 
 
 }
 
@@ -210,6 +208,10 @@ static at_command_t commands[] = {
     {"+SAVE", at_run_cmd_save, at_test_cmd_save, NULL, NULL},
     {"+LIMIT", NULL, at_test_cmd_setlimit, at_read_cmd_setlimit, at_write_cmd_setlimit},
     {"+SPDCORR", NULL, at_test_cmd_speedcorrect, at_read_cmd_speedcorrect, at_write_cmd_speedcorrect},
+
+    //AT+SAVE
+    // AT+SPDCORR?
+    
 };
 
 
@@ -337,7 +339,7 @@ void setup()
     lightsens_low = saved_params.getInt("lightsens_low", LOWLIGHT_SENS);     
     alarm_atf_temp = saved_params.getInt("alarm_atf_temp", 90);
     alarm_engine_temp = saved_params.getInt("alarm_engine_temp", 90);    
-    speedcorrect = saved_params.getInt("speedcorrect", 98);   
+    speedcorrect = saved_params.getInt("speedcorrect", 102);   
 
 
     Serial.println("loadScreen MAIN");
@@ -524,7 +526,7 @@ void loop()
             mps_odom_params_t params_odo = can_handler.get_odom_params();
             saved_params.putDouble("tripA", params_odo.trip_a); 
             saved_params.putDouble("tripB", params_odo.trip_b); 
-            saved_params.end();
+            //saved_params.end();
             Serial.println("params saved");
             poweroffTimer.setTimeout(60000);
             Serial.println("poweroffTimer activate");
@@ -546,7 +548,7 @@ void loop()
             ignCheckTimer.setTimeout(5000);  
             digitalWrite(POWERKEY_PIN, 1);
 
-            saved_params.begin("params", false);
+            //saved_params.begin("params", false);
 
             Serial.println("poweroffTimer DEactivate-----------------------------------------------------------------------------");
         }    
